@@ -1,0 +1,67 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+          components: rustfmt, clippy
+        
+      - uses: Swatinem/rust-cache@v1
+        name: Setup Cache
+
+      - name: Install deps
+        run: |
+          cargo install --debug cargo-make
+          sudo apt update && sudo apt install kcov
+
+      - name: Pre build check
+        run: cargo make check
+
+      - name: Lint
+        run: cargo make lint
+
+      - name: Check Format
+        run: cargo make fmt-check
+
+      - name: Build
+        run: cargo make build
+
+      - name: Check Doc
+        run: cargo make doc
+        
+      - name: Test
+        run: cargo make test
+
+      - name: Coverage generation
+        run: cargo make coverage-flow
+
+      - uses: codecov/codecov-action@v2
+        name: Codecov upload
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+        
+      - name: Check Schemata
+        run: cargo make schema-check
+
+      - name: Check Serde
+        run: cargo make serde-check
+
+      - name: Check go bindings
+        run: cargo make golang-check
