@@ -1,0 +1,56 @@
+name: Rust
+
+on:
+  push:
+    branches: [ master, dev ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          default: true
+          override: true
+          components: rustfmt, clippy
+        
+      - uses: Swatinem/rust-cache@v1
+        name: Setup Cache
+
+      - uses: Install cargo-make
+        run: cargo install --debug cargo-make
+
+      - rame: Pre build check
+        run: cargo make check
+
+      - name: Lint (clippy)
+        run: cargo make lint
+
+      - name: Check Format
+        run: cargo make fmt-check
+
+      - name: Build
+        run: cargo make build
+
+      - name: Check Doc
+        run: cargo make doc
+        
+      - name: Test
+        run: cargo make test
+
+      #- name: Coverage upload
+      #  run: cargo make ci-coverage-flow
+        
+      - name: Check Schemata
+        run: cargo make schema-check
+
+      - name: Check Serde
+        run: cargo make serde
