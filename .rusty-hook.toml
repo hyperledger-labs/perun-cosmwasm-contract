@@ -1,0 +1,5 @@
+[hooks]
+pre-push = "make check"
+
+[logging]
+verbose = true
