@@ -1,5 +1,20 @@
+//  Copyright 2021 PolyCrypt GmbH
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//! Core functionality for controlling the on-chain part of state channels.
 use crate::{
-    crypto::{verify_fully_signed, OffIdentity, Sig},
+    crypto::{OffIdentity, Sig},
     ensure,
     error::ContractError,
     msg::{ExecuteMsg, InitMsg, QueryMsg},
@@ -50,16 +65,35 @@ pub fn execute(
 ///
 /// Can be used to query the contract state.
 #[entry_point]
-pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
+pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
         QueryMsg::Deposit(fid) => query_deposit(deps, fid),
+        QueryMsg::Dispute(cid) => query_dispute(deps, cid),
     }
 }
 
 /// See [crate::msg::QueryMsg::Deposit].
-fn query_deposit(deps: Deps, fid: FundingId) -> StdResult<Binary> {
-    let deposit = DEPOSITS.load(deps.storage, fid)?;
-    to_binary(&deposit)
+fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
+    match DEPOSITS.may_load(deps.storage, fid)? {
+        Some(deposit) => {
+            let bin = to_binary(&deposit);
+            ensure!(bin.is_ok(), ContractError::Std(bin.unwrap_err()));
+            Ok(bin.unwrap())
+        }
+        None => Err(ContractError::UnknownChannel {}),
+    }
+}
+
+/// See [crate::msg::QueryMsg::Dispute].
+fn query_dispute(deps: Deps, cid: ChannelId) -> Result<Binary, ContractError> {
+    match DISPUTES.may_load(deps.storage, cid)? {
+        Some(dispute) => {
+            let bin = to_binary(&dispute);
+            ensure!(bin.is_ok(), ContractError::Std(bin.unwrap_err()));
+            Ok(bin.unwrap())
+        }
+        None => Err(ContractError::UnknownDispute {}),
+    }
 }
 
 /// See [crate::msg::ExecuteMsg::Deposit].
@@ -83,7 +117,7 @@ fn dispute(
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
     ensure!(!state.finalized, ContractError::StateFinal {});
-    verify_fully_signed(params, state, sigs)?;
+    state.verify_fully_signed(params, sigs)?;
     let channel_id = state.channel_id.clone();
 
     match DISPUTES.may_load(storage, channel_id.clone())? {
@@ -125,7 +159,7 @@ fn conclude(
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
     ensure!(state.finalized, ContractError::StateNotFinal {});
-    verify_fully_signed(params, state, sigs)?;
+    state.verify_fully_signed(params, sigs)?;
     let channel_id = &state.channel_id;
 
     match DISPUTES.may_load(storage, channel_id.clone())? {

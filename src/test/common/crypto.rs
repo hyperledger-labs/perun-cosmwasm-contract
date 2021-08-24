@@ -12,9 +12,22 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//! Definition of the on-chain storage containers.
-use crate::types::{ChannelId, Dispute, FundingId, NativeBalance};
-use cw_storage_plus::Map;
+use crate::{
+    crypto::{hash, Sig, SIG_PREFIX},
+    types::State,
+};
+use k256::ecdsa::{
+    signature::{DigestSigner, Signature as _},
+    SigningKey,
+};
+use serde::Serialize;
 
-pub const DEPOSITS: Map<FundingId, NativeBalance> = Map::new("deposits");
-pub const DISPUTES: Map<ChannelId, Dispute> = Map::new("register");
+pub fn sign<T: Serialize>(obj: &T, sk: &SigningKey) -> Sig {
+    let h = hash(obj, SIG_PREFIX.into()).unwrap();
+    let s: k256::ecdsa::Signature = sk.sign_digest(h);
+    Sig(s.as_bytes().into())
+}
+
+pub fn fully_sign(state: &State, keys: &[SigningKey]) -> Vec<Sig> {
+    keys.iter().map(|key| sign(state, key)).collect()
+}

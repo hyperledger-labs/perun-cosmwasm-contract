@@ -1,0 +1,57 @@
+[env]
+RUST_BACKTRACE = "1"
+
+[tasks.ci]
+dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema-check", "serde-check"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--all-features"]
+
+[tasks.schema]
+command = "cargo"
+args = ["run", "--example", "schema"]
+
+[tasks.schema-check]
+command = "git"
+args = ["diff", "--quiet", "./schema/"]
+dependencies = ["schema"]
+
+[tasks.serde]
+command = "cargo"
+args = ["run", "--example", "serde"]
+
+[tasks.serde-check]
+command = "git"
+args = ["diff", "--quiet", "./serde/"]
+dependencies = ["serde"]
+
+[tasks.build]
+command = "cargo"
+args = ["build", "-q", "--all-targets", "--all-features"]
+
+[tasks.fmt-check]
+command = "cargo"
+args = ["fmt", "-q", "--all", "--", "--check"]
+dependencies = ["install-rustfmt"]
+
+[tasks.check]
+command = "cargo"
+args = ["check", "-q", "--all-targets", "--all-features", "--locked"]
+
+[tasks.doc]
+command = "cargo"
+args = ["doc", "-q", "--no-deps", "--all-features"]
+
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "-q", "--all-targets", "--all-features"]
+dependencies = ["install-clippy-any"]
+
+[tasks.optimize]
+script = '''
+docker run --rm -v .:/code \
+  	--mount type=volume,source="$(basename ${PWD})_cache",target=/code/target \
+  	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  	cosmwasm/rust-optimizer:0.11.4
+'''

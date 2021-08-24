@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "QueryMsg",
-  "description": "Can be used to query the contract state with [crate::contract::query].",
+  "description": "Message to query the state of the [crate::contract].\n\nEach message corresponds to one query.",
   "anyOf": [
     {
       "type": "object",
@@ -10,19 +10,28 @@
       ],
       "properties": {
         "deposit": {
-          "type": "object",
-          "required": [
-            "fid"
-          ],
-          "properties": {
-            "fid": {
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "format": "uint8",
-                "minimum": 0.0
-              }
-            }
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    {
+      "type": "object",
+      "required": [
+        "dispute"
+      ],
+      "properties": {
+        "dispute": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "format": "uint8",
+            "minimum": 0.0
           }
         }
       },

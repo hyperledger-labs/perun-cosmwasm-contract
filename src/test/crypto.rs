@@ -12,9 +12,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-//! Definition of the on-chain storage containers.
-use crate::types::{ChannelId, Dispute, FundingId, NativeBalance};
-use cw_storage_plus::Map;
+use crate::{
+    crypto::verify,
+    test::common::{crypto::sign, random::random_account},
+};
+use rand_core::RngCore;
 
-pub const DEPOSITS: Map<FundingId, NativeBalance> = Map::new("deposits");
-pub const DISPUTES: Map<ChannelId, Dispute> = Map::new("register");
+#[test]
+fn sig_verify() {
+    let mut rng = rand::thread_rng();
+    let (sk, pk) = random_account(&mut rng);
+    let mut msg: [u8; 32] = Default::default();
+    rng.fill_bytes(&mut msg);
+
+    let sig = sign(&msg, &sk);
+    assert!(verify(&msg, &pk, &sig).is_ok());
+}

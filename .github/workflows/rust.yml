@@ -25,13 +25,15 @@ jobs:
       - uses: Swatinem/rust-cache@v1
         name: Setup Cache
 
-      - uses: Install cargo-make
-        run: cargo install --debug cargo-make
+      - name: Install deps
+        run: |
+          cargo install --debug cargo-make
+          sudo apt update && sudo apt install kcov
 
-      - rame: Pre build check
+      - name: Pre build check
         run: cargo make check
 
-      - name: Lint (clippy)
+      - name: Lint
         run: cargo make lint
 
       - name: Check Format
@@ -46,11 +48,17 @@ jobs:
       - name: Test
         run: cargo make test
 
-      #- name: Coverage upload
-      #  run: cargo make ci-coverage-flow
+      - name: Coverage generation
+        run: cargo make coverage-flow
+
+      - uses: codecov/codecov-action@v2
+        name: Codecov upload
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
         
       - name: Check Schemata
         run: cargo make schema-check
 
       - name: Check Serde
-        run: cargo make serde
+        run: cargo make serde-check

@@ -1,15 +1,31 @@
+//  Copyright 2021 PolyCrypt GmbH
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//! Messages for interacting with the [crate::contract].
 use crate::{
     crypto::Sig,
-    types::{FundingId, Params, State, Withdrawal},
+    types::{ChannelId, FundingId, Params, State, Withdrawal},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
+/// Message to initialize the [crate::contract].
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct InitMsg {}
 
-/// Message to call a functions on the [crate::contract].
+/// Message to call functions on the [crate::contract].
 ///
 /// Each message corresponds to one function.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -51,7 +67,7 @@ pub enum ExecuteMsg {
     Withdraw(Withdrawal, Sig),
 }
 
-/// Message to query the [crate::contract].
+/// Message to query the state of the [crate::contract].
 ///
 /// Each message corresponds to one query.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -59,4 +75,6 @@ pub enum ExecuteMsg {
 pub enum QueryMsg {
     // Returns the on-chain deposit for a participant in a channel.
     Deposit(FundingId),
+    // Returns the on-chain dispute for a channel.
+    Dispute(ChannelId),
 }

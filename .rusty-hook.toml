@@ -1,5 +1,5 @@
 [hooks]
-pre-push = "make check"
+pre-push = "cargo make ci"
 
 [logging]
 verbose = true

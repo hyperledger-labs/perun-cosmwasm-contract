@@ -1,5 +1,21 @@
+//  Copyright 2021 PolyCrypt GmbH
+//
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+//
+//    http://www.apache.org/licenses/LICENSE-2.0
+//
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+
+//! Custom type definitions which model state channels.
 use crate::{
     crypto::{hash, verify, Hash, OffIdentity, OnIdentity, Sig},
+    ensure,
     error::ContractError,
 };
 use cosmwasm_std::{Coin, Timestamp};
@@ -7,8 +23,6 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::ops::Add;
-
-pub const NONCE_LEN: usize = 32;
 
 /// Uniquely identifies a channel.
 ///
@@ -24,10 +38,10 @@ pub type FundingId = Hash;
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct NativeBalance(cw0::NativeBalance);
 /// Random value that is used to make the [Params] of a channel unique.
-pub type Nonce = [u8; NONCE_LEN];
-/// Time duration in seconds. Used in [Params::dispute_duration];
+pub type Nonce = Vec<u8>;
+/// Timely duration in seconds.
 pub type Seconds = u64;
-/// State version counter. Used in [State::version];
+/// State version counter.
 pub type Version = u64;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -82,19 +96,20 @@ pub struct State {
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-/// On-chain dispute of a channel.
+/// Stores an on-chain dispute of a channel.
 pub enum Dispute {
-    /// Can be advanced with a higher version state via `deposit`.
+    /// Can be advanced with a higher version via `Dispute` as long as the
+    /// timeout did not run out.
     Active {
-        /// The state of the channel.
+        /// The state of the disputed channel.
         state: State,
 
         /// Timeout of the dispute.
         timeout: Timestamp,
     },
-    /// Concluded dispute that only allows a user to withdraw the outcome.
+    /// Can only be withdrawn from since the timeout ran out.
     Concluded {
-        /// The state of the channel.
+        /// The state of the disputed channel.
         state: State,
     },
 }
@@ -118,8 +133,9 @@ pub struct Withdrawal {
 }
 
 impl Params {
+    /// Calculates the channel id from this Params.
     pub fn channel_id(&self) -> Result<ChannelId, ContractError> {
-        let h = hash(self)?;
+        let h = hash(self, vec![])?;
         Ok(h.finalize().to_vec())
     }
 }
@@ -148,33 +164,56 @@ impl Add<&NativeBalance> for NativeBalance {
 }
 
 impl NativeBalance {
-    /// `a` has at least all coins and amounts that `b` has.
-    /// Intuitively models `a >= b`.
+    /// Models `self >= b`.
+    /// Defines a non-strict partial order in the mathematical sense since
+    /// there exist `a` and `b` where `¬(a >= b) ^ ¬(b >= a)`.
     /// Only works with normalized inputs.
     pub fn greater_or_equal(&self, b: &NativeBalance) -> bool {
-        self.0 .0.iter().map(|c| b.0.has(c)).any(|x| x)
+        b.0 .0.iter().map(|b| self.0.has(b)).all(|x| x)
     }
 }
 
 impl State {
+    /// Verifies that `from` signed this State.
     pub fn verify(&self, sig: &Sig, from: &OffIdentity) -> Result<(), ContractError> {
         verify(self, from, sig)
+    }
+    /// Verifies that all participants signed this State.
+    pub fn verify_fully_signed(&self, params: &Params, sigs: &[Sig]) -> Result<(), ContractError> {
+        // Check that the State and Params match.
+        let channel_id = params.channel_id()?;
+        ensure!(
+            self.channel_id == channel_id,
+            ContractError::WrongChannelId {}
+        );
+        // Channels without participants are invalid.
+        ensure!(!sigs.is_empty(), ContractError::InvalidSignatureNum {});
+        // Check the state signatures.
+        ensure!(
+            sigs.len() == params.participants.len(),
+            ContractError::WrongSignatureNum {}
+        );
+        for (i, sig) in sigs.iter().enumerate() {
+            self.verify(sig, &params.participants[i])?;
+        }
+        Ok(())
     }
 }
 
 impl Withdrawal {
+    /// Verifies that `from` signed this Withdrawal.
     pub fn verify(&self, sig: &Sig) -> Result<(), ContractError> {
         verify(self, &self.part, sig)
     }
-
+    // Calculates the funding id from this Withdrawal.
     pub fn funding_id(&self) -> Result<FundingId, ContractError> {
         calc_funding_id(&self.channel_id, &self.part)
     }
 }
 
-/// Calculates the funding ID of a participant in a channel.
-/// Returns the hash of `channel` concatenated with `part`.
+/// Calculates the funding ID for a participant in a channel.
 ///
+/// Returns the hash of the `ChannelId` concatenated with `OffIdentity`.
 /// Must be consistent with the go-perun connector.
 pub fn calc_funding_id(
     channel: &ChannelId,
@@ -185,7 +224,7 @@ pub fn calc_funding_id(
         channel: &'a ChannelId,
         part: &'a OffIdentity,
     }
-    let digest = hash(&Funding { channel, part })?;
+    let digest = hash(&Funding { channel, part }, vec![])?;
     Ok(digest.finalize().to_vec())
 }
 
@@ -195,64 +234,5 @@ pub fn calc_funding_id(
 /// <https://serde.rs/#data-formats> for a list of formats.
 /// Must be consistent with the go-perun connector.
 pub fn encode_obj<T: Serialize>(obj: &T) -> Option<Vec<u8>> {
-    serde_json::to_vec(obj).ok()
-    //bincode::serialize(obj).ok()
+    rmp_serde::to_vec(obj).ok()
 }
-
-/*impl Balance {
-    pub fn checked_add(self, other: &Self) -> Result<Self, ContractError> {
-        ensure!(
-            self.0.denom == other.0.denom,
-            ContractError::DenomMismatch {}
-        );
-        let amount = self.0.amount.checked_add(other.0.amount)?;
-        Ok(Balance::from(Coin {
-            denom: self.0.denom,
-            amount: amount,
-        }))
-    }
-
-    pub fn from(v: Coin) -> Self {
-        Self(v)
-    }
-}*/
-
-/*
-/// Represents a multi-asset balance.
-impl MultiBalance {
-    /// Checks that the two MultiBalances have the denoms.
-    /// Returns their sum or an error.
-    pub fn checked_add(self, other: &Self) -> Result<Self, ContractError> {
-        if self == Self::default() {
-            return Ok(other.clone());
-        } else if *other == Self::default() {
-            return Ok(self);
-        }
-        // Check that the Balances have the same length.
-        // The denoms are checked in `Balance::checked_add`.
-        ensure!(
-            self.0.len() == other.0.len(),
-            ContractError::DenomMismatch {}
-        );
-        let ret = self
-            .0
-            .iter()
-            .enumerate()
-            .map(|(i, s)| s.clone().checked_add(&other.0[i]))
-            .collect::<Result<Vec<Balance>, ContractError>>()?;
-        Ok(Self(ret))
-    }
-
-    pub fn from(v: Vec<Coin>) -> Self {
-        Self(
-            v.iter()
-                .map(|c| Balance::from(c.clone()))
-                .collect::<Vec<_>>(),
-        )
-    }
-
-    pub fn as_vec(self) -> Vec<Coin> {
-        self.0.iter().map(|c| c.clone().0).collect::<Vec<_>>()
-    }
-}
-*/

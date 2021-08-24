@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "ExecuteMsg",
-  "description": "Message to call a function on the [crate::contract].\n\nEach message corresponds to one function, see [crate::contract::execute].",
+  "description": "Message to call functions on the [crate::contract].\n\nEach message corresponds to one function.",
   "anyOf": [
     {
       "description": "Deposits funds into a channel for a specific [FundingId].\n\nAdds the newly deposited amount to already existing deposits. Funds that are deposited to an invalid `funding_id` will be lost. Over-funding a channel can result in lost funds as well.",
@@ -130,6 +130,7 @@
       ]
     },
     "OffIdentity": {
+      "description": "Off-Chain identity of a participant.",
       "type": "array",
       "items": {
         "type": "integer",
@@ -159,9 +160,7 @@
             "type": "integer",
             "format": "uint8",
             "minimum": 0.0
-          },
-          "maxItems": 32,
-          "minItems": 32
+          }
         },
         "participants": {
           "description": "Participants of the channel.\n\nContains the off-chain identities which are used to verify signatures for off-chain related crypto.",
@@ -173,6 +172,7 @@
       }
     },
     "Sig": {
+      "description": "Cryptographic signature.",
       "type": "array",
       "items": {
         "type": "integer",
