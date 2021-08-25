@@ -13,7 +13,10 @@
 //  limitations under the License.
 
 use cosmwasm_schema::remove_schemas;
-use perun_cosmwasm::{test::common::random, types::encode_obj};
+use perun_cosmwasm::{
+    test::common::random,
+    types::{encode_obj, Funding},
+};
 use rand::{rngs::StdRng, SeedableRng};
 use serde::Serialize;
 use serde_json::json;
@@ -29,7 +32,6 @@ fn main() {
     let mut dir = current_dir().unwrap();
     dir.push("serde");
     create_dir_all(&dir).unwrap();
-    remove_schemas(&dir).unwrap();
     let mut rng = StdRng::seed_from_u64(1234);
 
     // Write encoding examples.
@@ -37,16 +39,21 @@ fn main() {
     write_obj(&state, "state", &dir);
     let (params, _) = random::random_params(&mut rng);
     write_obj(&params, "params", &dir);
-    let (withdrawal, _, index) = random::random_withdrawal(&mut rng);
+    let (withdrawal, _, _) = random::random_withdrawal(&mut rng);
     write_obj(&withdrawal, "withdrawal", &dir);
+    let funding = Funding {
+        channel: withdrawal.channel_id.clone(),
+        part: withdrawal.part.clone(),
+    };
+    write_obj(&funding, "funding", &dir);
 
     // Write ChannelID and FundingID examples.
     let json = json!(
     {
         "__comment": "The channel_id is calculated from params.bin and the funding_id from withdrawal.bin with the part_index",
         "channel_id": hex::encode(params.channel_id().unwrap()),
-        "part_index": index,
         "funding_id": hex::encode(withdrawal.funding_id().unwrap()),
+        "part": hex::encode(withdrawal.part.0),
     })
     .to_string();
     write_file(json.into(), "ids.json".into(), &dir);

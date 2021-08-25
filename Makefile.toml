@@ -8,6 +8,10 @@ dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema-ch
 command = "cargo"
 args = ["test", "--all-features"]
 
+[tasks.golang]
+command = "cargo"
+args = ["run", "--example", "golang"]
+
 [tasks.schema]
 command = "cargo"
 args = ["run", "--example", "schema"]

@@ -20,8 +20,9 @@ use crate::{
 };
 use cosmwasm_std::{Coin, Timestamp};
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
+use std::collections::BTreeMap;
 use std::ops::Add;
 
 /// Uniquely identifies a channel.
@@ -35,8 +36,20 @@ pub type FundingId = Hash;
 /// Native balance of the protocol.
 ///
 /// Holds balances for multiple assets.
-#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
+#[derive(Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct NativeBalance(cw0::NativeBalance);
+
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
+struct EncodedBalance(BTreeMap<String, u128>);
+
+/// Funding is used to encode a ChannelId with an OffIdentity
+/// to allow for a reproducible way of calculating a FundingId.
+#[derive(Serialize, Deserialize)]
+pub struct Funding {
+    pub channel: ChannelId,
+    pub part: OffIdentity,
+}
+
 /// Random value that is used to make the [Params] of a channel unique.
 pub type Nonce = Vec<u8>;
 /// Timely duration in seconds.
@@ -163,6 +176,30 @@ impl Add<&NativeBalance> for NativeBalance {
     }
 }
 
+impl Serialize for NativeBalance {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let mut map: EncodedBalance = Default::default();
+        for coin in self.0 .0.iter() {
+            map.0.insert(coin.denom.clone(), coin.amount.u128());
+        }
+        map.serialize(serializer)
+    }
+}
+
+impl<'a> Deserialize<'a> for NativeBalance {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'a>,
+    {
+        let map = EncodedBalance::deserialize(deserializer)?;
+        let mut bals: Vec<Coin> = Default::default();
+        for coin in map.0.iter() {
+            bals.push(Coin::new(coin.1.clone(), coin.0));
+        }
+        Ok(NativeBalance::from(bals))
+    }
+}
+
 impl NativeBalance {
     /// Models `self >= b`.
     /// Defines a non-strict partial order in the mathematical sense since
@@ -219,12 +256,13 @@ pub fn calc_funding_id(
     channel: &ChannelId,
     part: &OffIdentity,
 ) -> Result<FundingId, ContractError> {
-    #[derive(Serialize)]
-    struct Funding<'a> {
-        channel: &'a ChannelId,
-        part: &'a OffIdentity,
-    }
-    let digest = hash(&Funding { channel, part }, vec![])?;
+    let digest = hash(
+        &Funding {
+            channel: channel.clone(),
+            part: part.clone(),
+        },
+        vec![],
+    )?;
     Ok(digest.finalize().to_vec())
 }
 
@@ -234,5 +272,5 @@ pub fn calc_funding_id(
 /// <https://serde.rs/#data-formats> for a list of formats.
 /// Must be consistent with the go-perun connector.
 pub fn encode_obj<T: Serialize>(obj: &T) -> Option<Vec<u8>> {
-    rmp_serde::to_vec(obj).ok()
+    bcs::to_bytes(obj).ok()
 }
