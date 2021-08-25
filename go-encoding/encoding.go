@@ -47,11 +47,11 @@ func BcsDeserializeAddr(input []byte) (Addr, error) {
 	return obj, err
 }
 
-type EncodedBalance map[string]serde.Uint128
+type EncodedBalance []struct {Field0 string; Field1 [16]uint8}
 
 func (obj *EncodedBalance) Serialize(serializer serde.Serializer) error {
 	if err := serializer.IncreaseContainerDepth(); err != nil { return err }
-	if err := serialize_map_str_to_u128(((map[string]serde.Uint128)(*obj)), serializer); err != nil { return err }
+	if err := serialize_vector_tuple2_str_array16_u8_array((([]struct {Field0 string; Field1 [16]uint8})(*obj)), serializer); err != nil { return err }
 	serializer.DecreaseContainerDepth()
 	return nil
 }
@@ -66,9 +66,9 @@ func (obj *EncodedBalance) BcsSerialize() ([]byte, error) {
 }
 
 func DeserializeEncodedBalance(deserializer serde.Deserializer) (EncodedBalance, error) {
-	var obj map[string]serde.Uint128
+	var obj []struct {Field0 string; Field1 [16]uint8}
 	if err := deserializer.IncreaseContainerDepth(); err != nil { return (EncodedBalance)(obj), err }
-	if val, err := deserialize_map_str_to_u128(deserializer); err == nil { obj = val } else { return ((EncodedBalance)(obj)), err }
+	if val, err := deserialize_vector_tuple2_str_array16_u8_array(deserializer); err == nil { obj = val } else { return ((EncodedBalance)(obj)), err }
 	deserializer.DecreaseContainerDepth()
 	return (EncodedBalance)(obj), nil
 }
@@ -312,38 +312,31 @@ func BcsDeserializeWithdrawal(input []byte) (Withdrawal, error) {
 	}
 	return obj, err
 }
-func serialize_map_str_to_u128(value map[string]serde.Uint128, serializer serde.Serializer) error {
-	if err := serializer.SerializeLen(uint64(len(value))); err != nil { return err }
-	offsets := make([]uint64, len(value))
-	count := 0
-	for k, v := range(value) {
-		offsets[count] = serializer.GetBufferOffset()
-		count += 1
-		if err := serializer.SerializeStr(k); err != nil { return err }
-		if err := serializer.SerializeU128(v); err != nil { return err }
+func serialize_array16_u8_array(value [16]uint8, serializer serde.Serializer) error {
+	for _, item := range(value) {
+		if err := serializer.SerializeU8(item); err != nil { return err }
 	}
-	serializer.SortMapEntries(offsets);
 	return nil
 }
 
-func deserialize_map_str_to_u128(deserializer serde.Deserializer) (map[string]serde.Uint128, error) {
-	length, err := deserializer.DeserializeLen()
-	if err != nil { return nil, err }
-	obj := make(map[string]serde.Uint128)
-	previous_slice := serde.Slice { 0, 0 }
-	for i := 0; i < int(length); i++ {
-		var slice serde.Slice
-		slice.Start = deserializer.GetBufferOffset()
-		var key string
-		if val, err := deserializer.DeserializeStr(); err == nil { key = val } else { return nil, err }
-		slice.End = deserializer.GetBufferOffset()
-		if i > 0 {
-			err := deserializer.CheckThatKeySlicesAreIncreasing(previous_slice, slice)
-			if err != nil { return nil, err }
-		}
-		previous_slice = slice
-		if val, err := deserializer.DeserializeU128(); err == nil { obj[key] = val } else { return nil, err }
+func deserialize_array16_u8_array(deserializer serde.Deserializer) ([16]uint8, error) {
+	var obj [16]uint8
+	for i := range(obj) {
+		if val, err := deserializer.DeserializeU8(); err == nil { obj[i] = val } else { return obj, err }
 	}
+	return obj, nil
+}
+
+func serialize_tuple2_str_array16_u8_array(value struct {Field0 string; Field1 [16]uint8}, serializer serde.Serializer) error {
+	if err := serializer.SerializeStr(value.Field0); err != nil { return err }
+	if err := serialize_array16_u8_array(value.Field1, serializer); err != nil { return err }
+	return nil
+}
+
+func deserialize_tuple2_str_array16_u8_array(deserializer serde.Deserializer) (struct {Field0 string; Field1 [16]uint8}, error) {
+	var obj struct {Field0 string; Field1 [16]uint8}
+	if val, err := deserializer.DeserializeStr(); err == nil { obj.Field0 = val } else { return obj, err }
+	if val, err := deserialize_array16_u8_array(deserializer); err == nil { obj.Field1 = val } else { return obj, err }
 	return obj, nil
 }
 
@@ -379,6 +372,24 @@ func deserialize_vector_OffIdentity(deserializer serde.Deserializer) ([]OffIdent
 	obj := make([]OffIdentity, length)
 	for i := range(obj) {
 		if val, err := DeserializeOffIdentity(deserializer); err == nil { obj[i] = val } else { return nil, err }
+	}
+	return obj, nil
+}
+
+func serialize_vector_tuple2_str_array16_u8_array(value []struct {Field0 string; Field1 [16]uint8}, serializer serde.Serializer) error {
+	if err := serializer.SerializeLen(uint64(len(value))); err != nil { return err }
+	for _, item := range(value) {
+		if err := serialize_tuple2_str_array16_u8_array(item, serializer); err != nil { return err }
+	}
+	return nil
+}
+
+func deserialize_vector_tuple2_str_array16_u8_array(deserializer serde.Deserializer) ([]struct {Field0 string; Field1 [16]uint8}, error) {
+	length, err := deserializer.DeserializeLen()
+	if err != nil { return nil, err }
+	obj := make([]struct {Field0 string; Field1 [16]uint8}, length)
+	for i := range(obj) {
+		if val, err := deserialize_tuple2_str_array16_u8_array(deserializer); err == nil { obj[i] = val } else { return nil, err }
 	}
 	return obj, nil
 }

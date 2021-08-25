@@ -62,3 +62,6 @@ jobs:
 
       - name: Check Serde
         run: cargo make serde-check
+
+      - name: Check go bindings
+        run: cargo make golang-check

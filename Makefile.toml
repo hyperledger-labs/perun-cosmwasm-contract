@@ -2,7 +2,7 @@
 RUST_BACKTRACE = "1"
 
 [tasks.ci]
-dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema-check", "serde-check"]
+dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema-check", "serde-check", "golang-check"]
 
 [tasks.test]
 command = "cargo"
@@ -11,6 +11,11 @@ args = ["test", "--all-features"]
 [tasks.golang]
 command = "cargo"
 args = ["run", "--example", "golang"]
+
+[tasks.golang-check]
+command = "git"
+args = ["diff", "--quiet", "./go-encoding/"]
+dependencies = ["golang"]
 
 [tasks.schema]
 command = "cargo"
@@ -54,7 +59,7 @@ dependencies = ["install-clippy-any"]
 
 [tasks.optimize]
 script = '''
-docker run --rm -v .:/code \
+docker run --rm -v ${PWD}:/code \
   	--mount type=volume,source="$(basename ${PWD})_cache",target=/code/target \
   	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
   	cosmwasm/rust-optimizer:0.11.4

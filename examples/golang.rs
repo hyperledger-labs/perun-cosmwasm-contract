@@ -12,9 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use perun_cosmwasm::{test::common::random::*, types::*};
-use rand::{rngs::StdRng, SeedableRng};
-use serde::{Deserialize, Serialize};
+use perun_cosmwasm::types::*;
 use serde_generate::{golang, CodeGeneratorConfig, Encoding};
 use serde_reflection::{Tracer, TracerConfig};
 use std::{
@@ -34,6 +32,7 @@ fn main() {
     tracer.trace_simple_type::<Params>().unwrap();
     tracer.trace_simple_type::<Withdrawal>().unwrap();
     tracer.trace_simple_type::<Funding>().unwrap();
+    tracer.trace_simple_type::<NativeBalance>().unwrap();
     let reg = tracer.registry().unwrap();
 
     let mut source = Vec::new();

@@ -12,7 +12,6 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use cosmwasm_schema::remove_schemas;
 use perun_cosmwasm::{
     test::common::random,
     types::{encode_obj, Funding},
@@ -50,7 +49,7 @@ fn main() {
     // Write ChannelID and FundingID examples.
     let json = json!(
     {
-        "__comment": "The channel_id is calculated from params.bin and the funding_id from withdrawal.bin with the part_index",
+        "__comment": "The channel_id is calculated from params.bin and the funding_id from withdrawal.bin",
         "channel_id": hex::encode(params.channel_id().unwrap()),
         "funding_id": hex::encode(withdrawal.funding_id().unwrap()),
         "part": hex::encode(withdrawal.part.0),

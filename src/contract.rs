@@ -22,8 +22,8 @@ use crate::{
     types::*,
 };
 use cosmwasm_std::{
-    entry_point, to_binary, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response,
-    StdResult, Storage, Timestamp,
+    entry_point, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    Storage, Timestamp,
 };
 use std::{ops::Add, result::Result};
 
@@ -76,9 +76,12 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
 fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
     match DEPOSITS.may_load(deps.storage, fid)? {
         Some(deposit) => {
-            let bin = to_binary(&deposit);
-            ensure!(bin.is_ok(), ContractError::Std(bin.unwrap_err()));
-            Ok(bin.unwrap())
+            let bin = encode_obj(&deposit);
+            ensure!(
+                bin.is_some(),
+                ContractError::InternalError("could not encode object".into())
+            );
+            Ok(bin.unwrap().into())
         }
         None => Err(ContractError::UnknownChannel {}),
     }
@@ -88,9 +91,12 @@ fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
 fn query_dispute(deps: Deps, cid: ChannelId) -> Result<Binary, ContractError> {
     match DISPUTES.may_load(deps.storage, cid)? {
         Some(dispute) => {
-            let bin = to_binary(&dispute);
-            ensure!(bin.is_ok(), ContractError::Std(bin.unwrap_err()));
-            Ok(bin.unwrap())
+            let bin = encode_obj(&dispute);
+            ensure!(
+                bin.is_some(),
+                ContractError::InternalError("could not encode object".into())
+            );
+            Ok(bin.unwrap().into())
         }
         None => Err(ContractError::UnknownDispute {}),
     }

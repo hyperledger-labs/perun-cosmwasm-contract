@@ -22,7 +22,6 @@ use cosmwasm_std::{Coin, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
-use std::collections::BTreeMap;
 use std::ops::Add;
 
 /// Uniquely identifies a channel.
@@ -40,7 +39,7 @@ pub type FundingId = Hash;
 pub struct NativeBalance(cw0::NativeBalance);
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
-struct EncodedBalance(BTreeMap<String, u128>);
+struct EncodedBalance(Vec<(String, [u8; 16])>);
 
 /// Funding is used to encode a ChannelId with an OffIdentity
 /// to allow for a reproducible way of calculating a FundingId.
@@ -180,7 +179,8 @@ impl Serialize for NativeBalance {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map: EncodedBalance = Default::default();
         for coin in self.0 .0.iter() {
-            map.0.insert(coin.denom.clone(), coin.amount.u128());
+            let data = coin.amount.u128().to_be_bytes();
+            map.0.push((coin.denom.clone(), data));
         }
         map.serialize(serializer)
     }
@@ -194,7 +194,9 @@ impl<'a> Deserialize<'a> for NativeBalance {
         let map = EncodedBalance::deserialize(deserializer)?;
         let mut bals: Vec<Coin> = Default::default();
         for coin in map.0.iter() {
-            bals.push(Coin::new(coin.1.clone(), coin.0));
+            let data: [u8; 16] = coin.1;
+            let amount = u128::from_be_bytes(data);
+            bals.push(Coin::new(amount, coin.0.clone()));
         }
         Ok(NativeBalance::from(bals))
     }
@@ -273,4 +275,15 @@ pub fn calc_funding_id(
 /// Must be consistent with the go-perun connector.
 pub fn encode_obj<T: Serialize>(obj: &T) -> Option<Vec<u8>> {
     bcs::to_bytes(obj).ok()
+}
+
+/// Defines how objects are decoded in Perun CosmWASM.
+///
+/// Placed here for easy access but could also be places in test/common/.
+//#[cfg(test)]
+pub fn decode_obj<'a, T>(raw: &'a [u8]) -> Option<T>
+where
+    T: Deserialize<'a>,
+{
+    bcs::from_bytes(raw).ok()
 }

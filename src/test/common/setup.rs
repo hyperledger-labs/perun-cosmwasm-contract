@@ -21,7 +21,7 @@ use crate::{
     types::*,
 };
 use cosmwasm_std::{
-    coin, from_binary,
+    coin,
     testing::{mock_dependencies, mock_env, mock_info, MockApi, MockQuerier, MockStorage},
     Coin, DepsMut, Env, OwnedDeps, Response,
 };
@@ -147,7 +147,7 @@ pub fn do_withdraw(
 pub fn query_deposit(deps: DepsMut, fid: FundingId) -> NativeBalance {
     match query(deps.as_ref(), mock_env(), QueryMsg::Deposit(fid)) {
         Err(_) => NativeBalance::default(),
-        Ok(deposit) => from_binary::<NativeBalance>(&deposit).unwrap(),
+        Ok(deposit) => decode_obj::<NativeBalance>(&deposit).unwrap(),
     }
 }
 
