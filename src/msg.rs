@@ -36,7 +36,7 @@ pub enum ExecuteMsg {
     /// Adds the newly deposited amount to already existing deposits.
     /// Funds that are deposited to an invalid `funding_id` will be lost.
     /// Over-funding a channel can result in lost funds as well.
-    Deposit(FundingId),
+    Deposit { funding_id: FundingId },
     /// Disputes a channel in case of a dishonest participant.
     ///
     /// Can only be called with a non-finalized state that is signed by
@@ -46,25 +46,33 @@ pub enum ExecuteMsg {
     /// A dispute automatically starts a timeout of [Params::dispute_duration]
     /// and can only be re-disputed while it did not run out.
     /// [ExecuteMsg::Conclude] can be called after the timeout ran out.
-    Dispute(Params, State, Vec<Sig>),
+    Dispute {
+        params: Params,
+        state: State,
+        sigs: Vec<Sig>,
+    },
     /// Collaboratively concludes a channel in one step.
     ///
     /// This function concludes a channel in the case that all participants
     /// want to close it.
     /// Can only be called with a [State::finalized] state that is signed by
     /// all participants.
-    Conclude(Params, State, Vec<Sig>),
+    Conclude {
+        params: Params,
+        state: State,
+        sigs: Vec<Sig>,
+    },
     /// Concluded a disputed channel.
     ///
     /// Can only be called after the timeout of the dispute ran out or if
     /// a [State::finalized] state is provided and signed by all participants.
-    ConcludeDispute(Params),
+    ConcludeDispute { params: Params },
     /// Withdraws funds from a concluded channel.
     ///
     /// Can be called by each participant after a channel was concluded to
     /// withdraw his outcome of the channel.
     /// This is the counterpart to [ExecuteMsg::Deposit].
-    Withdraw(Withdrawal, Sig),
+    Withdraw { withdrawal: Withdrawal, sig: Sig },
 }
 
 /// Message to query the state of the [crate::contract].
@@ -74,7 +82,7 @@ pub enum ExecuteMsg {
 #[serde(rename_all = "snake_case")]
 pub enum QueryMsg {
     // Returns the on-chain deposit for a participant in a channel.
-    Deposit(FundingId),
+    Deposit { funding_id: FundingId },
     // Returns the on-chain dispute for a channel.
-    Dispute(ChannelId),
+    Dispute { channel_id: ChannelId },
 }

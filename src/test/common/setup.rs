@@ -101,7 +101,9 @@ pub fn do_deposit(
     bals: &NativeBalance,
     who: String,
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Deposit(fid.clone());
+    let msg = ExecuteMsg::Deposit {
+        funding_id: fid.clone(),
+    };
     let info = mock_info(who.as_ref(), Vec::<Coin>::from(bals.clone()).as_slice());
     execute(deps, mock_env(), info, msg)
 }
@@ -112,7 +114,11 @@ pub fn do_conclude(
     state: &State,
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Conclude(params.clone(), state.clone(), sigs.into());
+    let msg = ExecuteMsg::Conclude {
+        params: params.clone(),
+        state: state.clone(),
+        sigs: sigs.into(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
@@ -123,13 +129,19 @@ pub fn do_dispute(
     state: &State,
     sigs: &Vec<Sig>,
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Dispute(params.clone(), state.clone(), sigs.clone());
+    let msg = ExecuteMsg::Dispute {
+        params: params.clone(),
+        state: state.clone(),
+        sigs: sigs.clone(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
 
 pub fn do_conclude_dispute(deps: DepsMut, params: &Params) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::ConcludeDispute(params.clone());
+    let msg = ExecuteMsg::ConcludeDispute {
+        params: params.clone(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
@@ -139,13 +151,16 @@ pub fn do_withdraw(
     withdrawal: &Withdrawal,
     sig: &Sig,
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Withdraw(withdrawal.clone(), sig.clone());
+    let msg = ExecuteMsg::Withdraw {
+        withdrawal: withdrawal.clone(),
+        sig: sig.clone(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
 
-pub fn query_deposit(deps: DepsMut, fid: FundingId) -> NativeBalance {
-    match query(deps.as_ref(), mock_env(), QueryMsg::Deposit(fid)) {
+pub fn query_deposit(deps: DepsMut, funding_id: FundingId) -> NativeBalance {
+    match query(deps.as_ref(), mock_env(), QueryMsg::Deposit { funding_id }) {
         Err(_) => NativeBalance::default(),
         Ok(deposit) => decode_obj::<NativeBalance>(&deposit).unwrap(),
     }

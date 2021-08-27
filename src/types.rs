@@ -38,8 +38,18 @@ pub type FundingId = Hash;
 #[derive(Clone, Default, Debug, PartialEq, JsonSchema)]
 pub struct NativeBalance(cw0::NativeBalance);
 
+/// Used to encode a [NativeBalance].
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
-struct EncodedBalance(Vec<(String, [u8; 16])>);
+struct EncodableBalance {
+    pub coins: Vec<EncodableCoin>,
+}
+
+/// Used to encode a [cosmwasm_std::Coin].
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
+struct EncodableCoin {
+    pub denom: String,
+    pub amount: [u8; 16],
+}
 
 /// Funding is used to encode a ChannelId with an OffIdentity
 /// to allow for a reproducible way of calculating a FundingId.
@@ -177,12 +187,15 @@ impl Add<&NativeBalance> for NativeBalance {
 
 impl Serialize for NativeBalance {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map: EncodedBalance = Default::default();
+        let mut bals: EncodableBalance = Default::default();
         for coin in self.0 .0.iter() {
-            let data = coin.amount.u128().to_be_bytes();
-            map.0.push((coin.denom.clone(), data));
+            let amount = coin.amount.u128().to_be_bytes();
+            bals.coins.push(EncodableCoin {
+                denom: coin.denom.clone(),
+                amount,
+            });
         }
-        map.serialize(serializer)
+        bals.serialize(serializer)
     }
 }
 
@@ -191,14 +204,14 @@ impl<'a> Deserialize<'a> for NativeBalance {
     where
         D: Deserializer<'a>,
     {
-        let map = EncodedBalance::deserialize(deserializer)?;
-        let mut bals: Vec<Coin> = Default::default();
-        for coin in map.0.iter() {
-            let data: [u8; 16] = coin.1;
+        let bals = EncodableBalance::deserialize(deserializer)?;
+        let mut coins: Vec<Coin> = Default::default();
+        for coin in bals.coins.iter() {
+            let data: [u8; 16] = coin.amount;
             let amount = u128::from_be_bytes(data);
-            bals.push(Coin::new(amount, coin.0.clone()));
+            coins.push(Coin::new(amount, coin.denom.clone()));
         }
-        Ok(NativeBalance::from(bals))
+        Ok(NativeBalance::from(coins))
     }
 }
 

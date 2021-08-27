@@ -88,13 +88,21 @@ You can generate them with:
 cargo make schema
 ```
 
-### go-perun Connector
+## go-perun Connector
 It is possible to generate binary encodings for all off-chain data structs. 
 This is useful for testing the *go-perun* connector. Executing:  
 ```sh
 cargo make serde
 ```
 will create a `serde/*` directory which contains `.bin` files which should be deserializeable from the *go-perun* connector.
+
+## golang encode bindings
+You can generate golang code that en- and decodes all structures that are needed for go-perun
+with:
+```sh
+cargo make golang
+```
+which will generate an `encoding.go` file in `go-encoding/`.
 
 ## Release build
 A reproducible and optimized production build can be created with:

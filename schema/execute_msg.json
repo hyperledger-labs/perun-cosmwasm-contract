@@ -11,11 +11,19 @@
       ],
       "properties": {
         "deposit": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
+          "type": "object",
+          "required": [
+            "funding_id"
+          ],
+          "properties": {
+            "funding_id": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            }
           }
         }
       },
@@ -29,23 +37,26 @@
       ],
       "properties": {
         "dispute": {
-          "type": "array",
-          "items": [
-            {
+          "type": "object",
+          "required": [
+            "params",
+            "sigs",
+            "state"
+          ],
+          "properties": {
+            "params": {
               "$ref": "#/definitions/Params"
             },
-            {
-              "$ref": "#/definitions/State"
-            },
-            {
+            "sigs": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Sig"
               }
+            },
+            "state": {
+              "$ref": "#/definitions/State"
             }
-          ],
-          "maxItems": 3,
-          "minItems": 3
+          }
         }
       },
       "additionalProperties": false
@@ -58,23 +69,26 @@
       ],
       "properties": {
         "conclude": {
-          "type": "array",
-          "items": [
-            {
+          "type": "object",
+          "required": [
+            "params",
+            "sigs",
+            "state"
+          ],
+          "properties": {
+            "params": {
               "$ref": "#/definitions/Params"
             },
-            {
-              "$ref": "#/definitions/State"
-            },
-            {
+            "sigs": {
               "type": "array",
               "items": {
                 "$ref": "#/definitions/Sig"
               }
+            },
+            "state": {
+              "$ref": "#/definitions/State"
             }
-          ],
-          "maxItems": 3,
-          "minItems": 3
+          }
         }
       },
       "additionalProperties": false
@@ -87,7 +101,15 @@
       ],
       "properties": {
         "conclude_dispute": {
-          "$ref": "#/definitions/Params"
+          "type": "object",
+          "required": [
+            "params"
+          ],
+          "properties": {
+            "params": {
+              "$ref": "#/definitions/Params"
+            }
+          }
         }
       },
       "additionalProperties": false
@@ -100,17 +122,19 @@
       ],
       "properties": {
         "withdraw": {
-          "type": "array",
-          "items": [
-            {
-              "$ref": "#/definitions/Withdrawal"
-            },
-            {
-              "$ref": "#/definitions/Sig"
-            }
+          "type": "object",
+          "required": [
+            "sig",
+            "withdrawal"
           ],
-          "maxItems": 2,
-          "minItems": 2
+          "properties": {
+            "sig": {
+              "$ref": "#/definitions/Sig"
+            },
+            "withdrawal": {
+              "$ref": "#/definitions/Withdrawal"
+            }
+          }
         }
       },
       "additionalProperties": false

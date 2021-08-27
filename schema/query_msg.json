@@ -10,11 +10,19 @@
       ],
       "properties": {
         "deposit": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
+          "type": "object",
+          "required": [
+            "funding_id"
+          ],
+          "properties": {
+            "funding_id": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            }
           }
         }
       },
@@ -27,11 +35,19 @@
       ],
       "properties": {
         "dispute": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
+          "type": "object",
+          "required": [
+            "channel_id"
+          ],
+          "properties": {
+            "channel_id": {
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "format": "uint8",
+                "minimum": 0.0
+              }
+            }
           }
         }
       },

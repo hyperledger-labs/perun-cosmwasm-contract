@@ -49,15 +49,21 @@ pub fn execute(
     msg: ExecuteMsg,
 ) -> Result<Response, ContractError> {
     match msg {
-        ExecuteMsg::Deposit(funding_id) => deposit(deps.storage, info, funding_id),
-        ExecuteMsg::Dispute(params, state, sigs) => {
-            dispute(deps.storage, env.block.time, &params, &state, &sigs)
-        }
-        ExecuteMsg::Conclude(params, state, sigs) => conclude(deps.storage, &params, &state, &sigs),
-        ExecuteMsg::ConcludeDispute(params) => {
+        ExecuteMsg::Deposit { funding_id } => deposit(deps.storage, info, funding_id),
+        ExecuteMsg::Dispute {
+            params,
+            state,
+            sigs,
+        } => dispute(deps.storage, env.block.time, &params, &state, &sigs),
+        ExecuteMsg::Conclude {
+            params,
+            state,
+            sigs,
+        } => conclude(deps.storage, &params, &state, &sigs),
+        ExecuteMsg::ConcludeDispute { params } => {
             conclude_dispute(deps.storage, env.block.time, &params)
         }
-        ExecuteMsg::Withdraw(withdrawal, sig) => withdraw(deps.storage, &withdrawal, &sig),
+        ExecuteMsg::Withdraw { withdrawal, sig } => withdraw(deps.storage, &withdrawal, &sig),
     }
 }
 
@@ -67,8 +73,8 @@ pub fn execute(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractError> {
     match msg {
-        QueryMsg::Deposit(fid) => query_deposit(deps, fid),
-        QueryMsg::Dispute(cid) => query_dispute(deps, cid),
+        QueryMsg::Deposit { funding_id } => query_deposit(deps, funding_id),
+        QueryMsg::Dispute { channel_id } => query_dispute(deps, channel_id),
     }
 }
 
