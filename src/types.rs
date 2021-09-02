@@ -107,7 +107,7 @@ pub struct State {
     pub finalized: bool,
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Clone, Debug, PartialEq, JsonSchema)]
 /// Stores an on-chain dispute of a channel.
 pub enum Dispute {
     /// Can be advanced with a higher version via `Dispute` as long as the
@@ -178,7 +178,7 @@ impl Add<&NativeBalance> for NativeBalance {
 impl Serialize for NativeBalance {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map: EncodedBalance = Default::default();
-        for coin in self.0 .0.iter() {
+        for coin in self.0.0.iter() {
             let data = coin.amount.u128().to_be_bytes();
             map.0.push((coin.denom.clone(), data));
         }
@@ -199,6 +199,49 @@ impl<'a> Deserialize<'a> for NativeBalance {
             bals.push(Coin::new(amount, coin.0.clone()));
         }
         Ok(NativeBalance::from(bals))
+    }
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+/// Dispute struct for serialization.
+pub struct SerializableDispute {
+    active: bool,
+    state: State,
+    timeout: u64,
+}
+
+impl Serialize for Dispute {
+    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        let d = match self {
+            Dispute::Active{state, timeout} => {
+                SerializableDispute{
+                    active: true,
+                    state: state.clone(),
+                    timeout: timeout.seconds(),
+                }
+            },
+            Dispute::Concluded{state} => {
+                SerializableDispute{
+                    active: false,
+                    state: state.clone(),
+                    timeout: 0,
+                }
+            }
+        };
+        d.serialize(serializer)
+    }
+}
+
+impl<'a> Deserialize<'a> for Dispute {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'a>,
+    {
+        let d = SerializableDispute::deserialize(deserializer)?;
+        match d.active {
+            true => Ok(Dispute::Active{state: d.state, timeout: Timestamp::from_seconds(d.timeout)}),
+            false => Ok(Dispute::Concluded{state: d.state}),
+        }
     }
 }
 

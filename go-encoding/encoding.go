@@ -216,6 +216,53 @@ func BcsDeserializeParams(input []byte) (Params, error) {
 	return obj, err
 }
 
+type SerializableDispute struct {
+	Active bool
+	State State
+	Timeout uint64
+}
+
+func (obj *SerializableDispute) Serialize(serializer serde.Serializer) error {
+	if err := serializer.IncreaseContainerDepth(); err != nil { return err }
+	if err := serializer.SerializeBool(obj.Active); err != nil { return err }
+	if err := obj.State.Serialize(serializer); err != nil { return err }
+	if err := serializer.SerializeU64(obj.Timeout); err != nil { return err }
+	serializer.DecreaseContainerDepth()
+	return nil
+}
+
+func (obj *SerializableDispute) BcsSerialize() ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("Cannot serialize null object")
+	}
+	serializer := bcs.NewSerializer();
+	if err := obj.Serialize(serializer); err != nil { return nil, err }
+	return serializer.GetBytes(), nil
+}
+
+func DeserializeSerializableDispute(deserializer serde.Deserializer) (SerializableDispute, error) {
+	var obj SerializableDispute
+	if err := deserializer.IncreaseContainerDepth(); err != nil { return obj, err }
+	if val, err := deserializer.DeserializeBool(); err == nil { obj.Active = val } else { return obj, err }
+	if val, err := DeserializeState(deserializer); err == nil { obj.State = val } else { return obj, err }
+	if val, err := deserializer.DeserializeU64(); err == nil { obj.Timeout = val } else { return obj, err }
+	deserializer.DecreaseContainerDepth()
+	return obj, nil
+}
+
+func BcsDeserializeSerializableDispute(input []byte) (SerializableDispute, error) {
+	if input == nil {
+		var obj SerializableDispute
+		return obj, fmt.Errorf("Cannot deserialize null array")
+	}
+	deserializer := bcs.NewDeserializer(input);
+	obj, err := DeserializeSerializableDispute(deserializer)
+	if err == nil && deserializer.GetBufferOffset() < uint64(len(input)) {
+		return obj, fmt.Errorf("Some input bytes were not read")
+	}
+	return obj, err
+}
+
 type State struct {
 	ChannelId []uint8
 	Version uint64
