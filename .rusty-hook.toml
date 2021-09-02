@@ -1,5 +1,5 @@
 [hooks]
-pre-push = "cargo make ci"
+pre-push = "./ci.sh"
 
 [logging]
 verbose = true

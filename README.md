@@ -40,7 +40,7 @@ cargo install cargo-make
 ```
 You can then use the following command to run all CI checks:
 ```sh
-cargo make ci
+./ci.sh
 ```
 `.rust-hooks.toml` defines this task as *pre-push* hook to avoid CI failures.  
 The first invocation will take longer since it installs additional dependencies.

@@ -31,25 +31,25 @@ jobs:
           sudo apt update && sudo apt install kcov
 
       - name: Pre build check
-        run: cargo make check
+        run: cargo make --cwd perun_cosmwasm check
 
       - name: Lint
-        run: cargo make lint
+        run: cargo make --cwd perun_cosmwasm lint
 
       - name: Check Format
-        run: cargo make fmt-check
+        run: cargo make --cwd perun_cosmwasm fmt-check
 
       - name: Build
-        run: cargo make build
+        run: cargo make --cwd perun_cosmwasm build
 
       - name: Check Doc
-        run: cargo make doc
+        run: cargo make --cwd perun_cosmwasm doc
         
       - name: Test
-        run: cargo make test
+        run: cargo make --cwd perun_cosmwasm test
 
       - name: Coverage generation
-        run: cargo make coverage-flow
+        run: cargo make --cwd perun_cosmwasm coverage-flow
 
       - uses: codecov/codecov-action@v2
         name: Codecov upload
@@ -58,4 +58,4 @@ jobs:
           fail_ci_if_error: false
         
       - name: Check Command outputs
-        run: cargo make ci-commands
+        run: cargo make --cwd commands ci
