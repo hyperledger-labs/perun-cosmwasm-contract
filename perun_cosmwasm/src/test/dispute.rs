@@ -16,11 +16,11 @@ use crate::{
     contract::execute,
     crypto::Sig,
     error::ContractError,
-    msg::ExecuteMsg,
-    test::common::{
+    mock::{
         crypto::{fully_sign, sign},
         setup::*,
     },
+    msg::ExecuteMsg,
     types::*,
 };
 use cosmwasm_std::testing::{mock_env, mock_info};

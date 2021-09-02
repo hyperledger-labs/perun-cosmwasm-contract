@@ -12,19 +12,19 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use crate::{
-    crypto::verify,
-    test::common::{crypto::sign, random::random_account},
-};
-use rand_core::RngCore;
+use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
+use perun_cosmwasm::msg::*;
+use std::{env::current_dir, fs::create_dir_all};
 
-#[test]
-fn sig_verify() {
-    let mut rng = rand::thread_rng();
-    let (sk, pk) = random_account(&mut rng);
-    let mut msg: [u8; 32] = Default::default();
-    rng.fill_bytes(&mut msg);
+/// Entry point for generating the schema files.
+fn main() {
+    let mut out_dir = current_dir().unwrap();
+    out_dir.push("out/schema");
+    create_dir_all(&out_dir).unwrap();
+    remove_schemas(&out_dir).unwrap();
 
-    let sig = sign(&msg, &sk);
-    assert!(verify(&msg, &pk, &sig).is_ok());
+    println!("Creating files in {}", out_dir.to_str().unwrap());
+    export_schema(&schema_for!(InitMsg), &out_dir);
+    export_schema(&schema_for!(ExecuteMsg), &out_dir);
+    export_schema(&schema_for!(QueryMsg), &out_dir);
 }

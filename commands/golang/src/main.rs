@@ -25,7 +25,7 @@ use std::{
 
 fn main() {
     let mut dir = current_dir().unwrap();
-    dir.push("go-encoding");
+    dir.push("out/golang");
     create_dir_all(&dir).unwrap();
     let mut tracer = Tracer::new(TracerConfig::default());
 
@@ -58,6 +58,7 @@ fn main() {
 
 fn write_file(data: String, name: String, dir: &Path) {
     let path = dir.join(name);
+    println!("Creating {}", path.to_str().unwrap());
     let _ = remove_file(&path);
     write(&path, data).expect("Could not write data to file");
 }

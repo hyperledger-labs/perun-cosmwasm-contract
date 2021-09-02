@@ -1,0 +1,17 @@
+[package]
+name = "schema"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+perun-cosmwasm = { path = "../../perun_cosmwasm", features = ["expose_mock"] }
+rand = "0.8.4"
+serde_json = "1.0"
+serde = { version = "1.0.125", default-features = false, features = ["derive"] }
+hex = "0.4.3"
+serde-reflection = "0.3.3"
+serde-generate = "0.19.3"
+rand_core = { version = "0.6.3", features = ["getrandom"] }
+cosmwasm-schema = { version = "0.14.0" }

@@ -12,7 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use crate::{test::common::random::*, types::*};
+use crate::{mock::random::*, types::*};
 
 #[test]
 fn state_serde() {

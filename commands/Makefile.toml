@@ -1,0 +1,3 @@
+[tasks.ci]
+dependencies = ["schema-check", "serde-check", "golang-check"]
+

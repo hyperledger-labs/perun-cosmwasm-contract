@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 use crate::{
-    test::common::{
+    mock::{
         crypto::{fully_sign, sign},
         random::{random_account, random_params_state, random_state, random_withdrawal},
     },

@@ -14,7 +14,7 @@
 
 use crate::{
     error::ContractError,
-    test::common::{
+    mock::{
         crypto::{fully_sign, sign},
         random::*,
         setup::*,

@@ -12,7 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use crate::{test::common::setup::*, types::NativeBalance};
+use crate::{mock::setup::*, types::NativeBalance};
 use cosmwasm_std::coin;
 
 #[test]

@@ -27,7 +27,10 @@
 pub mod contract;
 pub mod crypto;
 pub mod error;
+#[cfg(any(feature = "expose_mock", test))]
+pub mod mock;
 pub mod msg;
 pub mod storage;
+#[cfg(test)]
 pub mod test;
 pub mod types;

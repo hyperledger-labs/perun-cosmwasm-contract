@@ -55,13 +55,7 @@ jobs:
         name: Codecov upload
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+          fail_ci_if_error: false
         
-      - name: Check Schemata
-        run: cargo make schema-check
-
-      - name: Check Serde
-        run: cargo make serde-check
-
-      - name: Check go bindings
-        run: cargo make golang-check
+      - name: Check Command outputs
+        run: cargo make ci-commands

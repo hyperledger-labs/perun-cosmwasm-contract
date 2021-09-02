@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 use perun_cosmwasm::{
-    test::common::random,
+    mock::random,
     types::{encode_obj, Funding},
 };
 use rand::{rngs::StdRng, SeedableRng};
@@ -29,7 +29,7 @@ use std::{
 /// Entry point for generating binary files for testing the go-perun connector.
 fn main() {
     let mut dir = current_dir().unwrap();
-    dir.push("serde");
+    dir.push("out/serde");
     create_dir_all(&dir).unwrap();
     let mut rng = StdRng::seed_from_u64(1234);
 
@@ -65,6 +65,7 @@ fn write_obj<T: Serialize>(obj: &T, name: &str, dir: &Path) {
 
 fn write_file(data: Vec<u8>, name: String, dir: &Path) {
     let path = dir.join(name);
+    println!("Creating {}", path.to_str().unwrap());
     let _ = remove_file(&path);
     write(&path, data).expect("Could not write data to file");
 }

@@ -14,21 +14,22 @@
 *Perun CosmWASM Contracts* provides [go-perun] state channels for all *Cosmos* compatible blockchains.  
 
 ## Repo structure
-* `src/`
-  * `contract.rs`, `msg.rs`, `storage.rs` core logic
-  * `types.rs` custom types
-  * `errors.rs` custom errors
-  * `crypto.rs` signature helpers
-* `tests/`
-  * `common/` helpers
-  * `crypto.rs` signature tests
-  * `deposit.rs`, `conclude.rs`, `dispute.rs`, `withdraw.rs` core logic tests
-  * `types.rs` custom type tests
-* `examples/`
-  * `schema.rs` schema exporter
-  * `serde.rs` helper for *go-perun* connector testing
-* `schema/` CosmWASM schemata
-* `Cargo.toml` rust project configuration
+* `perun_cosmwasm/` Perun CosmWasm contract + tests
+  * `src/`
+    * `contract.rs`, `msg.rs`, `storage.rs` core logic
+    * `types.rs` custom types
+    * `errors.rs` custom errors
+    * `crypto.rs` signature helpers
+  * `tests/` Contract
+    * `crypto.rs` signature tests
+    * `deposit.rs`, `conclude.rs`, `dispute.rs`, `withdraw.rs` core logic tests
+    * `types.rs` custom type tests
+  * `mock/` test setup and mocking
+* `commands/`
+  * `schema/` schema exporter
+  * `serde/` helper for *go-perun* connector testing
+  * `golang/` go bindings generator
+  * `out/*` Output of each command
 * `Makefile.toml` convenience aliases for *cargo*
 * `.rusty-hook.toml` git hooks
 
@@ -43,6 +44,25 @@ cargo make ci
 ```
 `.rust-hooks.toml` defines this task as *pre-push* hook to avoid CI failures.  
 The first invocation will take longer since it installs additional dependencies.
+
+## Commands
+All available commands are:  
+
+* `schema`: Generates schema files which can be used to call contract functions.
+* `golang`: Creates go binding files for en- and decoding the off-chain data structs.
+* `serde`: Exports all off-chain data struct as binary files.
+
+A command writes its output to `commands/out/<cmd>/` after invocation with:  
+```sh
+cargo make <cmd>
+```
+
+## Release build
+A reproducible and optimized production build can be created with:
+```sh
+cargo make optimize
+```
+This will create a `perun_cosmwasm/artifacts/perun_cosmwasm.wasm` binary with checksum file which can be deployed to a *Cosmos* chain.
 
 ## Protocol
 
@@ -80,36 +100,6 @@ Types
 - **Withdrawal** authorizes an on-chain funds withdrawal.
 - **ChannelID** (aka *channel_id*) uniquely identifies a channel. Calculated as `Hash(params)`.
 - **FundingID** (aka *funding_id*) uniquely identifies a participant in a channel. Calculated as `Hash(channel_id|participant)`.
-
-## Schema generation
-All `json` schema files can be found in the `schema` directory.  
-You can generate them with:  
-```sh
-cargo make schema
-```
-
-## go-perun Connector
-It is possible to generate binary encodings for all off-chain data structs. 
-This is useful for testing the *go-perun* connector. Executing:  
-```sh
-cargo make serde
-```
-will create a `serde/*` directory which contains `.bin` files which should be deserializeable from the *go-perun* connector.
-
-## golang encode bindings
-You can generate golang code that en- and decodes all structures that are needed for go-perun
-with:
-```sh
-cargo make golang
-```
-which will generate an `encoding.go` file in `go-encoding/`.
-
-## Release build
-A reproducible and optimized production build can be created with:
-```sh
-cargo make optimize
-```
-This will create a `artefacts/perun_cosmwasm.wasm` binary with checksum file which can be deployed to a *Cosmos* chain.
 
 ## TODO (remove before submission)
 - Search for TODOs in the code
