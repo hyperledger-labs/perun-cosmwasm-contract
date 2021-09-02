@@ -54,15 +54,16 @@ All available commands are:
 
 A command writes its output to `commands/out/<cmd>/` after invocation with:  
 ```sh
-cargo make <cmd>
+cd commands && cargo make <cmd>
 ```
 
 ## Release build
 A reproducible and optimized production build can be created with:
 ```sh
-cargo make optimize
+cd perun_cosmwasm && cargo make optimize
 ```
-This will create a `perun_cosmwasm/artifacts/perun_cosmwasm.wasm` binary with checksum file which can be deployed to a *Cosmos* chain.
+This will create a `perun_cosmwasm/artifacts/perun_cosmwasm.wasm` binary with checksum file which can be deployed to a *Cosmos* chain. 
+`perun_cosmwasm/deploy.sh` contains a script for testing the deployability of a contract.
 
 ## Protocol
 

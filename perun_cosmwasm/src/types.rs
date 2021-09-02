@@ -18,7 +18,7 @@ use crate::{
     ensure,
     error::ContractError,
 };
-use cosmwasm_std::{Coin, Timestamp, Api};
+use cosmwasm_std::{Api, Coin, Timestamp};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
@@ -227,11 +227,21 @@ impl NativeBalance {
 
 impl State {
     /// Verifies that `from` signed this State.
-    pub fn verify(&self, sig: &Sig, from: &OffIdentity, api: &dyn Api) -> Result<(), ContractError> {
+    pub fn verify(
+        &self,
+        sig: &Sig,
+        from: &OffIdentity,
+        api: &dyn Api,
+    ) -> Result<(), ContractError> {
         verify(self, from, sig, api)
     }
     /// Verifies that all participants signed this State.
-    pub fn verify_fully_signed(&self, params: &Params, sigs: &[Sig], api: &dyn Api) -> Result<(), ContractError> {
+    pub fn verify_fully_signed(
+        &self,
+        params: &Params,
+        sigs: &[Sig],
+        api: &dyn Api,
+    ) -> Result<(), ContractError> {
         // Check that the State and Params match.
         let channel_id = params.channel_id()?;
         ensure!(

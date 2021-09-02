@@ -14,8 +14,8 @@
 
 //! Cryptographic helpers for hashing and signature verification.
 use crate::{ensure, error::ContractError, types::encode_obj};
-use schemars::JsonSchema;
 use cosmwasm_std::Api;
+use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 
@@ -57,8 +57,12 @@ pub fn hash<T: Serialize>(obj: &T, prefix: Vec<u8>) -> Result<Hasher, ContractEr
 /// All validation is done by this method to allow easy swapping of
 /// the signature algorithm.
 /// Must be consistent with the go-perun connector.
-pub fn verify<Object: Serialize>(obj: &Object, from: &OffIdentity, sig: &Sig, api: &dyn Api) -> Result<(), ContractError> 
-{
+pub fn verify<Object: Serialize>(
+    obj: &Object,
+    from: &OffIdentity,
+    sig: &Sig,
+    api: &dyn Api,
+) -> Result<(), ContractError> {
     let hasher = hash(obj, SIG_PREFIX.into())?;
     let hash = hasher.finalize();
     let ok = api.secp256k1_verify(&hash[..], sig.0.as_slice(), from.0.as_slice());

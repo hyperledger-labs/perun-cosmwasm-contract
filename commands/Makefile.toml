@@ -1,3 +1,23 @@
 [tasks.ci]
-dependencies = ["schema-check", "serde-check", "golang-check"]
+workspace = false
+dependencies = ["schema", "serde", "golang", "git-diff-empty"]
 
+[tasks.golang]
+workspace = false
+command = "cargo"
+args = ["run", "--bin", "golang"]
+
+[tasks.schema]
+workspace = false
+command = "cargo"
+args = ["run", "--bin", "schema"]
+
+[tasks.serde]
+workspace = false
+command = "cargo"
+args = ["run", "--bin", "serde"]
+
+[tasks.git-diff-empty]
+workspace = false
+command = "git"
+args = ["diff", "--quiet", "."]

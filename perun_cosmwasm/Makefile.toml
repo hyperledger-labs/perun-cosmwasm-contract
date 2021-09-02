@@ -1,0 +1,41 @@
+[env]
+RUST_BACKTRACE = "1"
+CARGO_MAKE_EXTEND_WORKSPACE_MAKEFILE = true
+
+[tasks.ci]
+dependencies = ["check", "lint", "fmt-check", "build", "doc", "test"]
+
+[tasks.test]
+command = "cargo"
+args = ["test", "--all-features"]
+
+[tasks.build]
+command = "cargo"
+args = ["build", "-q", "--all-targets", "--all-features"]
+
+[tasks.fmt-check]
+command = "cargo"
+args = ["fmt", "-q", "--all", "--", "--check"]
+dependencies = ["install-rustfmt"]
+
+[tasks.check]
+command = "cargo"
+args = ["check", "-q", "--all-targets", "--all-features", "--locked"]
+
+[tasks.doc]
+command = "cargo"
+args = ["doc", "-q", "--no-deps", "--all-features"]
+
+[tasks.lint]
+command = "cargo"
+args = ["clippy", "-q", "--all-targets", "--all-features"]
+dependencies = ["install-clippy-any"]
+
+[tasks.optimize]
+workspace = false
+script = '''
+docker run --rm -v ${PWD}:/code \
+  	--mount type=volume,source="$(basename ${PWD})_cache",target=/code/target \
+  	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
+  	cosmwasm/rust-optimizer:0.11.5
+'''

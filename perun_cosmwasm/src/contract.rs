@@ -60,9 +60,7 @@ pub fn execute(
             state,
             sigs,
         } => conclude(deps, &params, &state, &sigs),
-        ExecuteMsg::ConcludeDispute { params } => {
-            conclude_dispute(deps, env.block.time, &params)
-        }
+        ExecuteMsg::ConcludeDispute { params } => conclude_dispute(deps, env.block.time, &params),
         ExecuteMsg::Withdraw { withdrawal, sig } => withdraw(deps, &withdrawal, &sig),
     }
 }
@@ -114,9 +112,13 @@ fn deposit(
     info: MessageInfo,
     funding_id: FundingId,
 ) -> Result<Response, ContractError> {
-    DEPOSITS.update(deps.storage, funding_id, |holding| -> Result<_, ContractError> {
-        Ok(holding.unwrap_or_default().add(&info.funds.into()))
-    })?;
+    DEPOSITS.update(
+        deps.storage,
+        funding_id,
+        |holding| -> Result<_, ContractError> {
+            Ok(holding.unwrap_or_default().add(&info.funds.into()))
+        },
+    )?;
     Ok(Default::default())
 }
 
@@ -178,7 +180,12 @@ fn conclude(
         Some(Dispute::Concluded { .. }) => Err(ContractError::AlreadyConcluded {}),
         Some(Dispute::Active { .. }) => Err(ContractError::DisputeActive {}),
         None => {
-            push_outcome(deps.storage, channel_id, &params.participants, &state.balances)?;
+            push_outcome(
+                deps.storage,
+                channel_id,
+                &params.participants,
+                &state.balances,
+            )?;
             let reg = Dispute::Concluded {
                 state: state.clone(),
             };
@@ -205,7 +212,12 @@ fn conclude_dispute(
                 ContractError::ConcludedTooEarly {}
             );
             // Write the outcome of the channel.
-            push_outcome(deps.storage, &channel_id, &params.participants, &state.balances)?;
+            push_outcome(
+                deps.storage,
+                &channel_id,
+                &params.participants,
+                &state.balances,
+            )?;
             // End the dispute.
             DISPUTES.save(deps.storage, channel_id, &Dispute::Concluded { state })?;
             Ok(Default::default())
