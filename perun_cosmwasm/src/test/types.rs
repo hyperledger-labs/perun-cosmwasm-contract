@@ -19,7 +19,7 @@ use crate::{
     },
     types::*,
 };
-use cosmwasm_std::{coin, coins, Coin, Uint128};
+use cosmwasm_std::{testing::mock_dependencies, coin, coins, Coin, Uint128};
 
 #[test]
 fn native_balance_cmp() {
@@ -69,8 +69,9 @@ fn state_sig_verify() {
     let (sk, pk) = random_account(&mut rng);
     let state = random_state(&mut rng);
 
+    let deps = mock_dependencies(&[]);
     let sig = sign(&state, &sk);
-    assert!(state.verify(&sig, &pk).is_ok());
+    assert!(state.verify(&sig, &pk, &deps.api).is_ok());
 }
 
 #[test]
@@ -78,8 +79,9 @@ fn state_sig_verify_full() {
     let mut rng = rand::thread_rng();
     let ((params, sks), state) = random_params_state(&mut rng);
 
+    let deps = mock_dependencies(&[]);
     let sigs = fully_sign(&state, &sks);
-    assert!(state.verify_fully_signed(&params, &sigs).is_ok());
+    assert!(state.verify_fully_signed(&params, &sigs, &deps.api).is_ok());
 }
 
 #[test]
@@ -87,6 +89,7 @@ fn withdrawal_sig_verify() {
     let mut rng = rand::thread_rng();
     let (withdrawal, sks, index) = random_withdrawal(&mut rng);
 
+    let deps = mock_dependencies(&[]);
     let sig = sign(&withdrawal, &sks[index]);
-    assert!(withdrawal.verify(&sig).is_ok());
+    assert!(withdrawal.verify(&sig, &deps.api).is_ok());
 }
