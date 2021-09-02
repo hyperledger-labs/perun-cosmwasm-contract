@@ -29,5 +29,6 @@ pub mod crypto;
 pub mod error;
 pub mod msg;
 pub mod storage;
+#[cfg(test)]
 pub mod test;
 pub mod types;
