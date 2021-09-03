@@ -22,7 +22,7 @@ use crate::{
     types::*,
 };
 use cosmwasm_std::{
-    entry_point, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     Storage, Timestamp,
 };
 use std::{ops::Add, result::Result};
@@ -36,7 +36,7 @@ pub fn instantiate(
     _env: Env,
     _info: MessageInfo,
     _msg: InitMsg,
-) -> StdResult<Response> {
+) -> Result<Response, ContractError> {
     Ok(Default::default())
 }
 
