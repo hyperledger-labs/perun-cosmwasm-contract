@@ -32,8 +32,8 @@ fn main() {
     tracer.trace_simple_type::<Params>().unwrap();
     tracer.trace_simple_type::<Withdrawal>().unwrap();
     tracer.trace_simple_type::<Funding>().unwrap();
-    tracer.trace_simple_type::<NativeBalance>().unwrap();
-    tracer.trace_simple_type::<Dispute>().unwrap();
+    // tracer.trace_simple_type::<WrappedNativeBalance>().unwrap();
+    // tracer.trace_simple_type::<Dispute>().unwrap();
     let reg = tracer.registry().unwrap();
 
     let mut source = Vec::new();

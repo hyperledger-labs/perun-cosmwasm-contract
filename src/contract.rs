@@ -246,7 +246,7 @@ fn push_outcome(
     storage: &mut dyn Storage,
     channel_id: &ChannelId,
     parts: &[OffIdentity],
-    outcome: &[NativeBalance],
+    outcome: &[WrappedNativeBalance],
 ) -> Result<Response, ContractError> {
     ensure!(
         parts.len() == outcome.len(),
@@ -257,8 +257,8 @@ fn push_outcome(
     // Save all Funding IDs for later.
     let mut fids = Vec::<FundingId>::default();
     // Calculate the sums of the outcome and deposit.
-    let mut sum_outcome = NativeBalance::default();
-    let mut sum_deposit = NativeBalance::default();
+    let mut sum_outcome = WrappedNativeBalance::default();
+    let mut sum_deposit = WrappedNativeBalance::default();
 
     for (i, part) in parts.iter().enumerate() {
         let fid = calc_funding_id(channel_id, part)?;

@@ -91,7 +91,7 @@ pub fn random_dispute_duration<T: CryptoRng + Rng>(rng: &mut T) -> Seconds {
     rng.gen_range(1..600)
 }
 
-pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> NativeBalance {
+pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedNativeBalance {
     let num_coins = rng.gen_range(0..9);
     (0..num_coins)
         .map(|i| coin(rng.next_u64().into(), format!("asset-#{}", i)))
@@ -99,7 +99,7 @@ pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> NativeBalance {
         .into()
 }
 
-pub fn random_balances<T: CryptoRng + Rng>(rng: &mut T, num_parts: usize) -> Vec<NativeBalance> {
+pub fn random_balances<T: CryptoRng + Rng>(rng: &mut T, num_parts: usize) -> Vec<WrappedNativeBalance> {
     (1..num_parts).map(|_| random_balance(rng)).collect()
 }
 

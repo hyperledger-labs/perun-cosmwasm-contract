@@ -23,8 +23,8 @@ use cosmwasm_std::{coin, coins, Coin, Uint128};
 
 #[test]
 fn native_balance_cmp() {
-    let a = NativeBalance::from(coins(1u128, "PRN"));
-    let b = NativeBalance::from(coins(2u128, "PRN"));
+    let a = WrappedNativeBalance::from(coins(1u128, "PRN"));
+    let b = WrappedNativeBalance::from(coins(2u128, "PRN"));
 
     assert!(a.greater_or_equal(&a));
     assert!(!a.greater_or_equal(&b));
@@ -33,10 +33,10 @@ fn native_balance_cmp() {
 
 #[test]
 fn native_balance_cmp_multiple() {
-    let a = NativeBalance::from(vec![coin(2u128, "PRN"), coin(2u128, "BTC")]);
-    let b = NativeBalance::from(vec![coin(1u128, "PRN"), coin(3u128, "BTC")]);
-    let c = NativeBalance::from(vec![coin(3u128, "PRN"), coin(3u128, "BTC")]);
-    let d = NativeBalance::from(coins(3u128, "PRN"));
+    let a = WrappedNativeBalance::from(vec![coin(2u128, "PRN"), coin(2u128, "BTC")]);
+    let b = WrappedNativeBalance::from(vec![coin(1u128, "PRN"), coin(3u128, "BTC")]);
+    let c = WrappedNativeBalance::from(vec![coin(3u128, "PRN"), coin(3u128, "BTC")]);
+    let d = WrappedNativeBalance::from(coins(3u128, "PRN"));
 
     assert!(a.greater_or_equal(&a));
     assert!(!a.greater_or_equal(&b));
@@ -49,7 +49,7 @@ fn native_balance_cmp_multiple() {
 
 #[test]
 fn native_balance_normalize() {
-    let a = NativeBalance::from(vec![coin(2u128, "PRN"), coin(2u128, "PRN")]);
+    let a = WrappedNativeBalance::from(vec![coin(2u128, "PRN"), coin(2u128, "PRN")]);
     let v: Vec<Coin> = a.into();
 
     assert_eq!(v.len(), 1);
@@ -59,7 +59,7 @@ fn native_balance_normalize() {
 #[test]
 #[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
 fn native_balance_overflow() {
-    let a = NativeBalance::from(coins(u128::MAX - 1, "PRN"));
+    let a = WrappedNativeBalance::from(coins(u128::MAX - 1, "PRN"));
     let _ = a.clone() + &a;
 }
 
