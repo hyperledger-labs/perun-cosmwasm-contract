@@ -17,6 +17,7 @@ use crate::{
     test::common::{crypto::sign, random::random_account},
 };
 use rand_core::RngCore;
+use cosmwasm_std::testing::mock_dependencies;
 
 #[test]
 fn sig_verify() {
@@ -25,6 +26,7 @@ fn sig_verify() {
     let mut msg: [u8; 32] = Default::default();
     rng.fill_bytes(&mut msg);
 
+    let deps = mock_dependencies(&[]);
     let sig = sign(&msg, &sk);
-    assert!(verify(&msg, &pk, &sig).is_ok());
+    assert!(verify(&msg, &pk, &sig, &deps.api).is_ok());
 }

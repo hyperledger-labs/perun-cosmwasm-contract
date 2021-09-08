@@ -14,13 +14,10 @@
 
 //! Cryptographic helpers for hashing and signature verification.
 use crate::{ensure, error::ContractError, types::encode_obj};
-// use k256::ecdsa::{
-//     signature::{DigestVerifier, Signature as _},
-//     Signature, VerifyingKey,
-// };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
+use cosmwasm_std::Api;
 
 /// Cryptographic signature.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -60,19 +57,11 @@ pub fn hash<T: Serialize>(obj: &T, prefix: Vec<u8>) -> Result<Hasher, ContractEr
 /// All validation is done by this method to allow easy swapping of
 /// the signature algorithm.
 /// Must be consistent with the go-perun connector.
-pub fn verify<T: Serialize>(_obj: &T, _from: &OffIdentity, _sig: &Sig) -> Result<(), ContractError> {
-    // // Decode the public key.
-    // let _pk = VerifyingKey::from_sec1_bytes(from.0.as_slice()); // TODO use as_slice everywhere
-    // ensure!(_pk.is_ok(), ContractError::InvalidIdentity {});
-    // let pk: VerifyingKey = _pk.unwrap();
-    // // Decode the signature.
-    // let s = Signature::from_bytes(sig.0.as_slice());
-    // ensure!(s.is_ok(), ContractError::InvalidSignature {});
-    // // Hash the data and verify the signature.
-    // let hash = hash(obj, SIG_PREFIX.into()).unwrap();
-    // ensure!(
-    //     pk.verify_digest(hash, &s.unwrap()).is_ok(),
-    //     ContractError::WrongSignature {}
-    // );
+pub fn verify<T: Serialize>(obj: &T, from: &OffIdentity, sig: &Sig, api: &dyn Api,) -> Result<(), ContractError> {
+    let hasher = hash(obj, SIG_PREFIX.into())?;
+    let hash = hasher.finalize();
+    let ok = api.secp256k1_verify(&hash[..], sig.0.as_slice(), from.0.as_slice());
+    ensure!(ok.is_ok(), ContractError::InvalidSignature {});
+    ensure!(ok.unwrap(), ContractError::WrongSignature {});
     Ok(())
 }

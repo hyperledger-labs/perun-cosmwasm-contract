@@ -51,13 +51,13 @@ pub fn execute(
     match msg {
         ExecuteMsg::Deposit(funding_id) => deposit(deps.storage, info, funding_id),
         ExecuteMsg::Dispute(params, state, sigs) => {
-            dispute(deps.storage, env.block.time, &params, &state, &sigs)
+            dispute(deps, env.block.time, &params, &state, &sigs)
         }
-        ExecuteMsg::Conclude(params, state, sigs) => conclude(deps.storage, &params, &state, &sigs),
+        ExecuteMsg::Conclude(params, state, sigs) => conclude(deps, &params, &state, &sigs),
         ExecuteMsg::ConcludeDispute(params) => {
             conclude_dispute(deps.storage, env.block.time, &params)
         }
-        ExecuteMsg::Withdraw(withdrawal, sig) => withdraw(deps.storage, &withdrawal, &sig),
+        ExecuteMsg::Withdraw(withdrawal, sig) => withdraw(deps, &withdrawal, &sig),
     }
 }
 
@@ -108,17 +108,17 @@ fn deposit(
 
 /// See [crate::msg::ExecuteMsg::Dispute].
 fn dispute(
-    storage: &mut dyn Storage,
+    deps: DepsMut,
     now: Timestamp,
     params: &Params,
     state: &State,
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
     ensure!(!state.finalized, ContractError::StateFinal {});
-    state.verify_fully_signed(params, sigs)?;
+    state.verify_fully_signed(params, sigs, deps.api)?;
     let channel_id = state.channel_id.clone();
 
-    match DISPUTES.may_load(storage, channel_id.clone())? {
+    match DISPUTES.may_load(deps.storage, channel_id.clone())? {
         None => {
             let timeout = now.plus_seconds(params.dispute_duration);
             let dispute = Dispute {
@@ -126,7 +126,7 @@ fn dispute(
                 timeout: timeout,
                 concluded: false,
             };
-            DISPUTES.save(storage, channel_id, &dispute)?;
+            DISPUTES.save(deps.storage, channel_id, &dispute)?;
             Ok(Default::default())
         }
         Some(Dispute {
@@ -146,7 +146,7 @@ fn dispute(
                 timeout,
                 concluded: false,
             };
-            DISPUTES.save(storage, channel_id, &dispute)?;
+            DISPUTES.save(deps.storage, channel_id, &dispute)?;
             Ok(Default::default())
         }
     }
@@ -154,16 +154,16 @@ fn dispute(
 
 /// See [crate::msg::ExecuteMsg::Conclude].
 fn conclude(
-    storage: &mut dyn Storage,
+    deps: DepsMut,
     params: &Params,
     state: &State,
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
     ensure!(state.finalized, ContractError::StateNotFinal {});
-    state.verify_fully_signed(params, sigs)?;
+    state.verify_fully_signed(params, sigs, deps.api)?;
     let channel_id = &state.channel_id;
 
-    match DISPUTES.may_load(storage, channel_id.clone())? {
+    match DISPUTES.may_load(deps.storage, channel_id.clone())? {
         Some(dispute) => {
             if dispute.concluded {
                 Err(ContractError::AlreadyConcluded {})
@@ -172,13 +172,13 @@ fn conclude(
             }
         },
         None => {
-            push_outcome(storage, channel_id, &params.participants, &state.balances)?;
+            push_outcome(deps.storage, channel_id, &params.participants, &state.balances)?;
             let reg = Dispute {
                 state: state.clone(),
                 timeout: Timestamp::from_seconds(0),
                 concluded: true,
             };
-            DISPUTES.save(storage, channel_id.clone(), &reg)?; // TODO maybe use error into?
+            DISPUTES.save(deps.storage, channel_id.clone(), &reg)?; // TODO maybe use error into?
             Ok(Default::default())
         }
     }
@@ -214,13 +214,13 @@ fn conclude_dispute(
 
 /// See [crate::msg::ExecuteMsg::Withdraw].
 fn withdraw(
-    storage: &mut dyn Storage,
+    deps: DepsMut,
     withdrawal: &Withdrawal,
     withdrawal_sig: &Sig,
 ) -> Result<Response, ContractError> {
-    withdrawal.verify(withdrawal_sig)?;
+    withdrawal.verify(withdrawal_sig, deps.api)?;
     // Load the dispute.
-    match DISPUTES.may_load(storage, withdrawal.channel_id.clone())? {
+    match DISPUTES.may_load(deps.storage, withdrawal.channel_id.clone())? {
         None => Err(ContractError::UnknownChannel {}),
         Some(Dispute { state: _state, timeout: _timeout, concluded }) => {
             if !concluded {
@@ -228,11 +228,11 @@ fn withdraw(
             } else {
                 let funding_id = withdrawal.funding_id()?;
                 // Load the deposit.
-                let deposit = DEPOSITS.may_load(storage, funding_id.clone())?;
+                let deposit = DEPOSITS.may_load(deps.storage, funding_id.clone())?;
                 ensure!(deposit.is_some(), ContractError::UnknownDeposit {});
                 let deposit = deposit.unwrap();
                 // Remove the deposit.
-                DEPOSITS.remove(storage, funding_id);
+                DEPOSITS.remove(deps.storage, funding_id);
                 // Transfer the outcome to the user.
                 let transfer = Send {
                     to_address: withdrawal.receiver.clone().into_string(),

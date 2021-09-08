@@ -18,7 +18,7 @@ use crate::{
     ensure,
     error::ContractError,
 };
-use cosmwasm_std::{Coin, Timestamp};
+use cosmwasm_std::{Coin, Timestamp, Api};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
@@ -254,11 +254,11 @@ impl WrappedNativeBalance {
 
 impl State {
     /// Verifies that `from` signed this State.
-    pub fn verify(&self, sig: &Sig, from: &OffIdentity) -> Result<(), ContractError> {
-        verify(self, from, sig)
+    pub fn verify(&self, sig: &Sig, from: &OffIdentity, api: &dyn Api) -> Result<(), ContractError> {
+        verify(self, from, sig, api)
     }
     /// Verifies that all participants signed this State.
-    pub fn verify_fully_signed(&self, params: &Params, sigs: &[Sig]) -> Result<(), ContractError> {
+    pub fn verify_fully_signed(&self, params: &Params, sigs: &[Sig], api: &dyn Api) -> Result<(), ContractError> {
         // Check that the State and Params match.
         let channel_id = params.channel_id()?;
         ensure!(
@@ -273,7 +273,7 @@ impl State {
             ContractError::WrongSignatureNum {}
         );
         for (i, sig) in sigs.iter().enumerate() {
-            self.verify(sig, &params.participants[i])?;
+            self.verify(sig, &params.participants[i], api)?;
         }
         Ok(())
     }
@@ -281,8 +281,8 @@ impl State {
 
 impl Withdrawal {
     /// Verifies that `from` signed this Withdrawal.
-    pub fn verify(&self, sig: &Sig) -> Result<(), ContractError> {
-        verify(self, &self.part, sig)
+    pub fn verify(&self, sig: &Sig, api: &dyn Api) -> Result<(), ContractError> {
+        verify(self, &self.part, sig, api)
     }
     // Calculates the funding id from this Withdrawal.
     pub fn funding_id(&self) -> Result<FundingId, ContractError> {
