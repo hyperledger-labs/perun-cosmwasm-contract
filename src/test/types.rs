@@ -57,7 +57,7 @@ fn native_balance_normalize() {
 }
 
 #[test]
-#[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+#[should_panic(expected = "attempt to add with overflow")]
 fn native_balance_overflow() {
     let a = WrappedNativeBalance::from(coins(u128::MAX - 1, "PRN"));
     let _ = a.clone() + &a;

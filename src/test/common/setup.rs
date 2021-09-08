@@ -147,7 +147,10 @@ pub fn do_withdraw(
 pub fn query_deposit(deps: DepsMut, fid: FundingId) -> WrappedNativeBalance {
     match query(deps.as_ref(), mock_env(), QueryMsg::Deposit(fid)) {
         Err(_) => WrappedNativeBalance::default(),
-        Ok(deposit) => decode_obj::<WrappedNativeBalance>(&deposit).unwrap(),
+        Ok(deposit) => {
+            let bals: cw0::NativeBalance = cosmwasm_std::from_binary(&deposit).unwrap();
+            WrappedNativeBalance::from(bals.0)
+        },
     }
 }
 

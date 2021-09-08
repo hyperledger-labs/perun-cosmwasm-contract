@@ -42,7 +42,7 @@ fn deposit_twice() {
 }
 
 #[test]
-#[should_panic(expected = "called `Option::unwrap()` on a `None` value")]
+#[should_panic(expected = "attempt to add with overflow")]
 fn deposit_overflow() {
     let (s, mut deps) = do_init();
 
