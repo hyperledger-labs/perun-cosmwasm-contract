@@ -71,13 +71,13 @@ pub fn new_setup() -> Setup {
         final_state: State {
             channel_id: cid.clone(),
             version: 123,
-            balances: alloc.clone(),
+            balances: alloc.iter().map(|bals| bals.0.clone()).collect(),
             finalized: true,
         },
         nfinal_state: State {
             channel_id: cid.clone(),
             version: 123,
-            balances: alloc.clone(),
+            balances: alloc.iter().map(|bals| bals.0.clone()).collect(),
             finalized: false,
         },
         alloc,

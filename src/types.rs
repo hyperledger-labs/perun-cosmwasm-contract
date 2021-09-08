@@ -23,6 +23,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 use std::ops::Add;
+use cw0::NativeBalance;
 
 /// Uniquely identifies a channel.
 ///
@@ -36,10 +37,12 @@ pub type FundingId = Hash;
 ///
 /// Holds balances for multiple assets.
 #[derive(Clone, Default, Debug, PartialEq, JsonSchema)]
-pub struct WrappedNativeBalance(cw0::NativeBalance);
+pub struct WrappedNativeBalance(pub NativeBalance);
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 struct EncodedBalance(Vec<(String, [u8; 16])>);
+
+pub type Deposit = WrappedNativeBalance;
 
 /// Funding is used to encode a ChannelId with an OffIdentity
 /// to allow for a reproducible way of calculating a FundingId.
@@ -97,7 +100,7 @@ pub struct State {
     /// Must have the same length as [Params::participants].
     /// The balances of a final state describe the outcome
     /// of a channel and can then be withdrawn.
-    pub balances: Vec<WrappedNativeBalance>,
+    pub balances: Vec<NativeBalance>,
 
     /// Whether or not this state is final.
     ///
@@ -107,23 +110,17 @@ pub struct State {
     pub finalized: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, JsonSchema)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 /// Stores an on-chain dispute of a channel.
-pub enum Dispute {
-    /// Can be advanced with a higher version via `Dispute` as long as the
-    /// timeout did not run out.
-    Active {
+/// Can be advanced with a higher version via `Dispute` as long as the
+/// timeout did not run out.
+pub struct Dispute {
         /// The state of the disputed channel.
-        state: State,
-
+        pub state: State,
         /// Timeout of the dispute.
-        timeout: Timestamp,
-    },
-    /// Can only be withdrawn from since the timeout ran out.
-    Concluded {
-        /// The state of the disputed channel.
-        state: State,
-    },
+        pub timeout: Timestamp,
+        /// Indicates whether the dispute has been concluded.
+        pub concluded: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -202,48 +199,48 @@ impl<'a> Deserialize<'a> for WrappedNativeBalance {
     }
 }
 
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-/// Dispute struct for serialization.
-pub struct SerializableDispute {
-    active: bool,
-    state: State,
-    timeout: u64,
-}
+// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
+// /// Dispute struct for serialization.
+// pub struct SerializableDispute {
+//     active: bool,
+//     state: State,
+//     timeout: u64,
+// }
 
-impl Serialize for Dispute {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let d = match self {
-            Dispute::Active{state, timeout} => {
-                SerializableDispute{
-                    active: true,
-                    state: state.clone(),
-                    timeout: timeout.seconds(),
-                }
-            },
-            Dispute::Concluded{state} => {
-                SerializableDispute{
-                    active: false,
-                    state: state.clone(),
-                    timeout: 0,
-                }
-            }
-        };
-        d.serialize(serializer)
-    }
-}
+// impl Serialize for Dispute {
+//     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+//         let d = match self {
+//             Dispute::Active{state, timeout} => {
+//                 SerializableDispute{
+//                     active: true,
+//                     state: state.clone(),
+//                     timeout: timeout.seconds(),
+//                 }
+//             },
+//             Dispute::Concluded{state} => {
+//                 SerializableDispute{
+//                     active: false,
+//                     state: state.clone(),
+//                     timeout: 0,
+//                 }
+//             }
+//         };
+//         d.serialize(serializer)
+//     }
+// }
 
-impl<'a> Deserialize<'a> for Dispute {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'a>,
-    {
-        let d = SerializableDispute::deserialize(deserializer)?;
-        match d.active {
-            true => Ok(Dispute::Active{state: d.state, timeout: Timestamp::from_seconds(d.timeout)}),
-            false => Ok(Dispute::Concluded{state: d.state}),
-        }
-    }
-}
+// impl<'a> Deserialize<'a> for Dispute {
+//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+//     where
+//         D: Deserializer<'a>,
+//     {
+//         let d = SerializableDispute::deserialize(deserializer)?;
+//         match d.active {
+//             true => Ok(Dispute::Active{state: d.state, timeout: Timestamp::from_seconds(d.timeout)}),
+//             false => Ok(Dispute::Concluded{state: d.state}),
+//         }
+//     }
+// }
 
 impl WrappedNativeBalance {
     /// Models `self >= b`.

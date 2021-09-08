@@ -15,7 +15,7 @@
 //! Messages for interacting with the [crate::contract].
 use crate::{
     crypto::Sig,
-    types::{ChannelId, FundingId, Params, State, Withdrawal},
+    types::{ChannelId, FundingId, Params, State, Withdrawal, Dispute},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -78,3 +78,9 @@ pub enum QueryMsg {
     // Returns the on-chain dispute for a channel.
     Dispute(ChannelId),
 }
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+pub struct DepositResponse ( pub Vec<cosmwasm_std::Coin> );
+
+#[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
+pub struct DisputeResponse ( pub Dispute );

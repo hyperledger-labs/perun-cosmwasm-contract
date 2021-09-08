@@ -86,6 +86,50 @@ func BcsDeserializeEncodedBalance(input []byte) (EncodedBalance, error) {
 	return obj, err
 }
 
+type Funding struct {
+	Channel []uint8
+	Part OffIdentity
+}
+
+func (obj *Funding) Serialize(serializer serde.Serializer) error {
+	if err := serializer.IncreaseContainerDepth(); err != nil { return err }
+	if err := serialize_vector_u8(obj.Channel, serializer); err != nil { return err }
+	if err := obj.Part.Serialize(serializer); err != nil { return err }
+	serializer.DecreaseContainerDepth()
+	return nil
+}
+
+func (obj *Funding) BcsSerialize() ([]byte, error) {
+	if obj == nil {
+		return nil, fmt.Errorf("Cannot serialize null object")
+	}
+	serializer := bcs.NewSerializer();
+	if err := obj.Serialize(serializer); err != nil { return nil, err }
+	return serializer.GetBytes(), nil
+}
+
+func DeserializeFunding(deserializer serde.Deserializer) (Funding, error) {
+	var obj Funding
+	if err := deserializer.IncreaseContainerDepth(); err != nil { return obj, err }
+	if val, err := deserialize_vector_u8(deserializer); err == nil { obj.Channel = val } else { return obj, err }
+	if val, err := DeserializeOffIdentity(deserializer); err == nil { obj.Part = val } else { return obj, err }
+	deserializer.DecreaseContainerDepth()
+	return obj, nil
+}
+
+func BcsDeserializeFunding(input []byte) (Funding, error) {
+	if input == nil {
+		var obj Funding
+		return obj, fmt.Errorf("Cannot deserialize null array")
+	}
+	deserializer := bcs.NewDeserializer(input);
+	obj, err := DeserializeFunding(deserializer)
+	if err == nil && deserializer.GetBufferOffset() < uint64(len(input)) {
+		return obj, fmt.Errorf("Some input bytes were not read")
+	}
+	return obj, err
+}
+
 type OffIdentity []uint8
 
 func (obj *OffIdentity) Serialize(serializer serde.Serializer) error {

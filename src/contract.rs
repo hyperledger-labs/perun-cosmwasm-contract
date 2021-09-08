@@ -17,12 +17,12 @@ use crate::{
     crypto::{OffIdentity, Sig},
     ensure,
     error::ContractError,
-    msg::{ExecuteMsg, InitMsg, QueryMsg},
+    msg::{ExecuteMsg, InitMsg, QueryMsg, DepositResponse, DisputeResponse},
     storage::{DEPOSITS, DISPUTES},
     types::*,
 };
 use cosmwasm_std::{
-    entry_point, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response,
+    entry_point, to_binary, BankMsg::Send, Binary, Deps, DepsMut, Env, MessageInfo, Response,
     Storage, Timestamp,
 };
 use std::{ops::Add, result::Result};
@@ -76,12 +76,8 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
 fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
     match DEPOSITS.may_load(deps.storage, fid)? {
         Some(deposit) => {
-            let bin = encode_obj(&deposit);
-            ensure!(
-                bin.is_some(),
-                ContractError::InternalError("could not encode object".into())
-            );
-            Ok(bin.unwrap().into())
+            let out = to_binary(&DepositResponse(deposit.0.0))?;
+            Ok(out)
         }
         None => Err(ContractError::UnknownChannel {}),
     }
@@ -91,12 +87,8 @@ fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
 fn query_dispute(deps: Deps, cid: ChannelId) -> Result<Binary, ContractError> {
     match DISPUTES.may_load(deps.storage, cid)? {
         Some(dispute) => {
-            let bin = encode_obj(&dispute);
-            ensure!(
-                bin.is_some(),
-                ContractError::InternalError("could not encode object".into())
-            );
-            Ok(bin.unwrap().into())
+            let out = to_binary(&DisputeResponse(dispute))?;
+            Ok(out)
         }
         None => Err(ContractError::UnknownDispute {}),
     }
@@ -129,31 +121,34 @@ fn dispute(
     match DISPUTES.may_load(storage, channel_id.clone())? {
         None => {
             let timeout = now.plus_seconds(params.dispute_duration);
-            let dispute = Dispute::Active {
+            let dispute = Dispute {
                 state: state.clone(),
-                timeout,
+                timeout: timeout,
+                concluded: false,
             };
             DISPUTES.save(storage, channel_id, &dispute)?;
             Ok(Default::default())
         }
-        Some(Dispute::Active {
+        Some(Dispute {
             state: old_state,
             timeout,
+            concluded,
         }) => {
+            ensure!(!concluded, ContractError::AlreadyConcluded {});
             ensure!(
                 state.version > old_state.version,
                 ContractError::DisputeVersionTooLow {}
             );
-            ensure!(now <= timeout, ContractError::DisputeTimedOut {});
+            ensure!(now < timeout, ContractError::DisputeTimedOut {});
 
-            let dispute = Dispute::Active {
+            let dispute = Dispute {
                 state: state.clone(),
                 timeout,
+                concluded: false,
             };
             DISPUTES.save(storage, channel_id, &dispute)?;
             Ok(Default::default())
         }
-        Some(Dispute::Concluded { .. }) => Err(ContractError::AlreadyConcluded {}),
     }
 }
 
@@ -169,12 +164,19 @@ fn conclude(
     let channel_id = &state.channel_id;
 
     match DISPUTES.may_load(storage, channel_id.clone())? {
-        Some(Dispute::Concluded { .. }) => Err(ContractError::AlreadyConcluded {}),
-        Some(Dispute::Active { .. }) => Err(ContractError::DisputeActive {}),
+        Some(dispute) => {
+            if dispute.concluded {
+                Err(ContractError::AlreadyConcluded {})
+            } else {
+                Err(ContractError::DisputeActive {})
+            }
+        },
         None => {
             push_outcome(storage, channel_id, &params.participants, &state.balances)?;
-            let reg = Dispute::Concluded {
+            let reg = Dispute {
                 state: state.clone(),
+                timeout: Timestamp::from_seconds(0),
+                concluded: true,
             };
             DISPUTES.save(storage, channel_id.clone(), &reg)?; // TODO maybe use error into?
             Ok(Default::default())
@@ -191,19 +193,22 @@ fn conclude_dispute(
     let channel_id = params.channel_id()?;
     match DISPUTES.may_load(storage, channel_id.clone())? {
         None => Err(ContractError::UnknownDispute {}),
-        Some(Dispute::Concluded { .. }) => Err(ContractError::AlreadyConcluded {}),
-        Some(Dispute::Active { state, timeout }) => {
+        Some(Dispute { state, timeout, concluded }) => {
+            if concluded {
+                Err(ContractError::AlreadyConcluded {})
+            } else {
             // Check that the timeout has elapsed for non-final states.
             ensure!(
-                state.finalized || now > timeout,
+                state.finalized || now >= timeout,
                 ContractError::ConcludedTooEarly {}
             );
             // Write the outcome of the channel.
             push_outcome(storage, &channel_id, &params.participants, &state.balances)?;
             // End the dispute.
-            DISPUTES.save(storage, channel_id, &Dispute::Concluded { state })?;
+            DISPUTES.save(storage, channel_id, &Dispute { state, timeout, concluded: true })?;
             Ok(Default::default())
-        }
+            }
+        },
     }
 }
 
@@ -217,22 +222,25 @@ fn withdraw(
     // Load the dispute.
     match DISPUTES.may_load(storage, withdrawal.channel_id.clone())? {
         None => Err(ContractError::UnknownChannel {}),
-        Some(Dispute::Active { .. }) => Err(ContractError::NotConcluded {}),
-        Some(Dispute::Concluded { .. }) => {
-            let funding_id = withdrawal.funding_id()?;
-            // Load the deposit.
-            let deposit = DEPOSITS.may_load(storage, funding_id.clone())?;
-            ensure!(deposit.is_some(), ContractError::UnknownDeposit {});
-            let deposit = deposit.unwrap();
-            // Remove the deposit.
-            DEPOSITS.remove(storage, funding_id);
-            // Transfer the outcome to the user.
-            let transfer = Send {
-                to_address: withdrawal.receiver.clone().into_string(),
-                amount: deposit.into(),
-            };
-            Ok(Response::new().add_message(transfer))
-        }
+        Some(Dispute { state: _state, timeout: _timeout, concluded }) => {
+            if !concluded {
+                Err(ContractError::NotConcluded {})
+            } else {
+                let funding_id = withdrawal.funding_id()?;
+                // Load the deposit.
+                let deposit = DEPOSITS.may_load(storage, funding_id.clone())?;
+                ensure!(deposit.is_some(), ContractError::UnknownDeposit {});
+                let deposit = deposit.unwrap();
+                // Remove the deposit.
+                DEPOSITS.remove(storage, funding_id);
+                // Transfer the outcome to the user.
+                let transfer = Send {
+                    to_address: withdrawal.receiver.clone().into_string(),
+                    amount: deposit.into(),
+                };
+                Ok(Response::new().add_message(transfer))
+            }
+        },
     }
 }
 
@@ -246,7 +254,7 @@ fn push_outcome(
     storage: &mut dyn Storage,
     channel_id: &ChannelId,
     parts: &[OffIdentity],
-    outcome: &[WrappedNativeBalance],
+    outcome: &[cw0::NativeBalance],
 ) -> Result<Response, ContractError> {
     ensure!(
         parts.len() == outcome.len(),
@@ -265,7 +273,8 @@ fn push_outcome(
         fids.push(fid.clone());
         let deposit = DEPOSITS.load(storage, fid).unwrap_or_default();
 
-        sum_outcome = sum_outcome.add(&outcome[i]);
+        let outcome_ = WrappedNativeBalance::from(outcome[i].0.clone());
+        sum_outcome = sum_outcome.add(&outcome_);
         sum_deposit = sum_deposit.add(&deposit);
     }
     // Ensure that the participants of a channel can never withdraw more
@@ -277,7 +286,8 @@ fn push_outcome(
     // Over-funding a channel will result in lost funds.
     // Now we split up all funds according to the outcome.
     for (i, fid) in fids.iter().enumerate() {
-        DEPOSITS.save(storage, fid.to_vec(), &outcome[i])?;
+        let outcome_ = WrappedNativeBalance::from(outcome[i].0.clone());
+        DEPOSITS.save(storage, fid.to_vec(), &outcome_)?;
     }
     Ok(Default::default())
 }

@@ -99,8 +99,8 @@ pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedNativeBalance {
         .into()
 }
 
-pub fn random_balances<T: CryptoRng + Rng>(rng: &mut T, num_parts: usize) -> Vec<WrappedNativeBalance> {
-    (1..num_parts).map(|_| random_balance(rng)).collect()
+pub fn random_balances<T: CryptoRng + Rng>(rng: &mut T, num_parts: usize) -> Vec<cw0::NativeBalance> {
+    (1..num_parts).map(|_| random_balance(rng).0).collect()
 }
 
 pub fn random_finalized<T: CryptoRng + Rng>(rng: &mut T) -> bool {
