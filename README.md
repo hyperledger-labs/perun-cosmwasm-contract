@@ -30,7 +30,6 @@
 * `schema/` CosmWASM schemata
 * `Cargo.toml` rust project configuration
 * `Makefile.toml` convenience aliases for *cargo*
-* `.rusty-hook.toml` git hooks
 
 ## Development Workflow
 This project uses a `cargo-make` which wraps `cargo` to run dev related tasks. Install it with:  
