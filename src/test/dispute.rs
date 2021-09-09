@@ -131,7 +131,7 @@ fn dispute_invalid_sigs() {
     for bad_sigs in sigs {
         assert_eq!(
             do_dispute(deps.as_mut(), &s.params, &good_state, &bad_sigs).unwrap_err(),
-            ContractError::InvalidSignature {}
+            ContractError::InvalidSignature("Invalid signature format".to_string())
         );
     }
 }

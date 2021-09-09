@@ -199,49 +199,6 @@ impl<'a> Deserialize<'a> for WrappedNativeBalance {
     }
 }
 
-// #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-// /// Dispute struct for serialization.
-// pub struct SerializableDispute {
-//     active: bool,
-//     state: State,
-//     timeout: u64,
-// }
-
-// impl Serialize for Dispute {
-//     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-//         let d = match self {
-//             Dispute::Active{state, timeout} => {
-//                 SerializableDispute{
-//                     active: true,
-//                     state: state.clone(),
-//                     timeout: timeout.seconds(),
-//                 }
-//             },
-//             Dispute::Concluded{state} => {
-//                 SerializableDispute{
-//                     active: false,
-//                     state: state.clone(),
-//                     timeout: 0,
-//                 }
-//             }
-//         };
-//         d.serialize(serializer)
-//     }
-// }
-
-// impl<'a> Deserialize<'a> for Dispute {
-//     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-//     where
-//         D: Deserializer<'a>,
-//     {
-//         let d = SerializableDispute::deserialize(deserializer)?;
-//         match d.active {
-//             true => Ok(Dispute::Active{state: d.state, timeout: Timestamp::from_seconds(d.timeout)}),
-//             false => Ok(Dispute::Concluded{state: d.state}),
-//         }
-//     }
-// }
-
 impl WrappedNativeBalance {
     /// Models `self >= b`.
     /// Defines a non-strict partial order in the mathematical sense since
@@ -314,16 +271,5 @@ pub fn calc_funding_id(
 /// <https://serde.rs/#data-formats> for a list of formats.
 /// Must be consistent with the go-perun connector.
 pub fn encode_obj<T: Serialize>(obj: &T) -> Option<Vec<u8>> {
-    bcs::to_bytes(obj).ok()
-}
-
-/// Defines how objects are decoded in Perun CosmWASM.
-///
-/// Placed here for easy access but could also be places in test/common/.
-//#[cfg(test)]
-pub fn decode_obj<'a, T>(raw: &'a [u8]) -> Option<T>
-where
-    T: Deserialize<'a>,
-{
-    bcs::from_bytes(raw).ok()
+    serde_jcs::to_vec(obj).ok()
 }

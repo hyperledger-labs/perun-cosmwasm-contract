@@ -35,7 +35,7 @@ pub type Hasher = Sha256;
 
 /// Prepended to all messages before they are digested and signed.
 /// Must be consistent with the go-perun connector.
-pub const SIG_PREFIX: &[u8] = "GO-PERUN/COSMWASM".as_bytes();
+pub const SIG_PREFIX: &[u8] = "".as_bytes();
 
 /// Returns the digest of `Serialize` object.
 ///
@@ -60,8 +60,14 @@ pub fn hash<T: Serialize>(obj: &T, prefix: Vec<u8>) -> Result<Hasher, ContractEr
 pub fn verify<T: Serialize>(obj: &T, from: &OffIdentity, sig: &Sig, api: &dyn Api,) -> Result<(), ContractError> {
     let hasher = hash(obj, SIG_PREFIX.into())?;
     let hash = hasher.finalize();
-    let ok = api.secp256k1_verify(&hash[..], sig.0.as_slice(), from.0.as_slice());
-    ensure!(ok.is_ok(), ContractError::InvalidSignature {});
-    ensure!(ok.unwrap(), ContractError::WrongSignature {});
-    Ok(())
+    let res = api.secp256k1_verify(&hash[..], sig.0.as_slice(), from.0.as_slice());
+    match res {
+        Ok( ok ) => {
+            match ok {
+                true => Ok(()),
+                false => Err(ContractError::WrongSignature{}),
+            }
+        },
+        Err(err) => Err(ContractError::InvalidSignature(err.to_string())),
+    }
 }

@@ -21,7 +21,7 @@ pub enum ContractError {
     #[error("{0}")]
     Std(#[from] StdError),
 
-    #[error("Internal error, equivalent to a panic.")]
+    #[error("Internal error: {0}")]
     InternalError(String),
 
     #[error("Insufficient deposits")]
@@ -51,13 +51,13 @@ pub enum ContractError {
     #[error("Concluded too early")]
     ConcludedTooEarly {},
 
-    #[error("Invalid signature")]
-    InvalidSignature {},
+    #[error("Invalid signature: {0}")]
+    InvalidSignature(String),
 
     #[error("Invalid identity")]
     InvalidIdentity {},
 
-    #[error("Wrong public key recovered from signature")]
+    #[error("Wrong signature")]
     WrongSignature {},
 
     #[error("Wrong number of signatures)")]
