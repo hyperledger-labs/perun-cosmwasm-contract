@@ -22,7 +22,7 @@ use crate::{
         setup::*,
     },
 };
-use cosmwasm_std::testing::{mock_env, mock_info};
+use cosmwasm_std::{Uint64, testing::{mock_env, mock_info}};
 
 #[test]
 fn conclude_f_final() {
@@ -173,7 +173,7 @@ fn conclude_d_after_timeout() {
     do_dispute(deps.as_mut(), &s.params, &s.nfinal_state, &sigs).unwrap();
 
     // Advance time after the timeout and try call to `ConcludeDispute`.
-    let env = advance_time(mock_env(), s.params.dispute_duration + 1);
+    let env = advance_time(mock_env(), s.params.dispute_duration + Uint64::from(1u64));
     let msg = ExecuteMsg::ConcludeDispute(s.params);
     let info = mock_info(ALICE, &[]);
     execute(deps.as_mut(), env, info, msg).unwrap();

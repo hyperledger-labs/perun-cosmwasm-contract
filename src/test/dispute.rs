@@ -23,7 +23,7 @@ use crate::{
     },
     types::*,
 };
-use cosmwasm_std::testing::{mock_env, mock_info};
+use cosmwasm_std::{Uint64, testing::{mock_env, mock_info}};
 
 /// Dispute works with a non-final state.
 #[test]
@@ -51,7 +51,7 @@ fn dispute_final() {
 #[should_panic(expected = "attempt to multiply with overflow")]
 fn dispute_dispute_duration_overflow() {
     let (mut s, mut deps) = do_init();
-    s.params.dispute_duration = Seconds::MAX - 1;
+    s.params.dispute_duration = Uint64::from(Seconds::MAX.u64() - 1);
     s.nfinal_state.channel_id = s.params.channel_id().unwrap();
     let sigs = fully_sign(&s.nfinal_state, &s.keys);
 
@@ -94,7 +94,7 @@ fn dispute_wrong_sigs() {
     let (s, mut deps) = do_init();
     let good_state = s.nfinal_state;
     let mut bad_state = good_state.clone();
-    bad_state.version += 1;
+    bad_state.version += Uint64::from(1u64);
 
     let sigs = [
         vec![sign(&good_state, &s.keys[0]), sign(&bad_state, &s.keys[1])],
@@ -200,7 +200,7 @@ fn dispute_higher_version() {
     do_dispute(deps.as_mut(), &s.params, &state, &sigs).unwrap();
 
     for _ in 1..10 {
-        state.version += 1;
+        state.version += Uint64::from(1u64);
         let sigs = fully_sign(&state, &s.keys);
         do_dispute(deps.as_mut(), &s.params, &state, &sigs).unwrap();
     }
@@ -217,13 +217,13 @@ fn dispute_timeout() {
     // Set the version to `version`.
     do_dispute(deps.as_mut(), &s.params, &state, &sigs).unwrap();
 
-    state.version += 1;
+    state.version += Uint64::from(1u64);
     let sigs = fully_sign(&state, &s.keys);
 
     // Try to dispute again with `version + 1` after the timeout.
     let msg = ExecuteMsg::Dispute(s.params.clone(), state, sigs);
     let info = mock_info(ALICE, &[]);
-    let env = advance_time(mock_env(), s.params.dispute_duration + 1);
+    let env = advance_time(mock_env(), s.params.dispute_duration + Uint64::from(1u64));
     assert_eq!(
         execute(deps.as_mut(), env, info, msg).unwrap_err(),
         ContractError::DisputeTimedOut {}

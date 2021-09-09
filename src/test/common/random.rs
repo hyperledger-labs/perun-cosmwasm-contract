@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 use crate::{crypto::OffIdentity, types::*};
-use cosmwasm_std::{coin, Coin};
+use cosmwasm_std::{coin, Coin, Uint64};
 use k256::{
     ecdsa::{SigningKey, VerifyingKey},
     elliptic_curve::sec1::ToEncodedPoint,
@@ -88,7 +88,7 @@ pub fn random_parts<T: CryptoRng + Rng>(rng: &mut T, n: usize) -> Vec<KeyPair> {
 }
 
 pub fn random_dispute_duration<T: CryptoRng + Rng>(rng: &mut T) -> Seconds {
-    rng.gen_range(1..600)
+    Uint64::from(rng.gen_range::<u64,_>(1..600))
 }
 
 pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedNativeBalance {

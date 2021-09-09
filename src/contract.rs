@@ -120,7 +120,7 @@ fn dispute(
 
     match DISPUTES.may_load(deps.storage, channel_id.clone())? {
         None => {
-            let timeout = now.plus_seconds(params.dispute_duration);
+            let timeout = now.plus_seconds(params.dispute_duration.u64());
             let dispute = Dispute {
                 state: state.clone(),
                 timeout: timeout,

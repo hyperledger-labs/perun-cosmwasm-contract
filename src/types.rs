@@ -18,7 +18,7 @@ use crate::{
     ensure,
     error::ContractError,
 };
-use cosmwasm_std::{Coin, Timestamp, Api};
+use cosmwasm_std::{Coin, Timestamp, Api, Uint64};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
@@ -55,9 +55,9 @@ pub struct Funding {
 /// Random value that is used to make the [Params] of a channel unique.
 pub type Nonce = Vec<u8>;
 /// Timely duration in seconds.
-pub type Seconds = u64;
+pub type Seconds = Uint64;
 /// State version counter.
-pub type Version = u64;
+pub type Version = Uint64;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
 /// Fixed parameters of a channel.

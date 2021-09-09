@@ -53,5 +53,5 @@ script = '''
 docker run --rm -v ${PWD}:/code \
   	--mount type=volume,source="$(basename ${PWD})_cache",target=/code/target \
   	--mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  	cosmwasm/rust-optimizer:0.11.4
+  	cosmwasm/rust-optimizer:0.11.5
 '''

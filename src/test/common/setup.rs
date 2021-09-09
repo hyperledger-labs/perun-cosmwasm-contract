@@ -52,7 +52,7 @@ pub fn new_setup() -> Setup {
     let params = Params {
         nonce: random_nonce(&mut rng),
         participants: vec![alice_off.1.clone(), bob_off.1.clone()],
-        dispute_duration: 60,
+        dispute_duration:  60u64.into(),
     };
     let cid = params.channel_id().unwrap();
     let alloc = vec![
@@ -70,13 +70,13 @@ pub fn new_setup() -> Setup {
         ],
         final_state: State {
             channel_id: cid.clone(),
-            version: 123,
+            version: 123u64.into(),
             balances: alloc.iter().map(|bals| bals.0.clone()).collect(),
             finalized: true,
         },
         nfinal_state: State {
             channel_id: cid.clone(),
-            version: 123,
+            version: 123u64.into(),
             balances: alloc.iter().map(|bals| bals.0.clone()).collect(),
             finalized: false,
         },
@@ -155,6 +155,6 @@ pub fn query_deposit(deps: DepsMut, fid: FundingId) -> WrappedNativeBalance {
 }
 
 pub fn advance_time(mut env: Env, by: Seconds) -> Env {
-    env.block.time = env.block.time.plus_seconds(by);
+    env.block.time = env.block.time.plus_seconds(by.u64());
     env
 }
