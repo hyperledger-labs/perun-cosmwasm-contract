@@ -42,8 +42,8 @@ pub struct Setup {
     pub fids: Vec<FundingId>,
     pub final_state: State,
     pub nfinal_state: State,
-    pub alloc: Vec<WrappedNativeBalance>,
-    pub outcome: WrappedNativeBalance,
+    pub alloc: Vec<WrappedBalance>,
+    pub outcome: WrappedBalance,
 }
 
 pub fn new_setup() -> Setup {
@@ -56,8 +56,8 @@ pub fn new_setup() -> Setup {
     };
     let cid = params.channel_id().unwrap();
     let alloc = vec![
-        WrappedNativeBalance::from(vec![coin(2, DENOMS[0]), coin(20, DENOMS[1])]),
-        WrappedNativeBalance::from(vec![coin(0, DENOMS[0]), coin(10, DENOMS[1])]),
+        WrappedBalance::from(vec![coin(2, DENOMS[0]), coin(20, DENOMS[1])]),
+        WrappedBalance::from(vec![coin(0, DENOMS[0]), coin(10, DENOMS[1])]),
     ];
     let outcome = alloc[0].clone().add(&alloc[1]);
     Setup {
@@ -98,7 +98,7 @@ pub fn do_init() -> (Setup, Deps) {
 pub fn do_deposit(
     deps: DepsMut,
     fid: &FundingId,
-    bals: &WrappedNativeBalance,
+    bals: &WrappedBalance,
     who: String,
 ) -> Result<Response, ContractError> {
     let msg = ExecuteMsg::Deposit(fid.clone());
@@ -144,12 +144,12 @@ pub fn do_withdraw(
     execute(deps, mock_env(), info, msg)
 }
 
-pub fn query_deposit(deps: DepsMut, fid: FundingId) -> WrappedNativeBalance {
+pub fn query_deposit(deps: DepsMut, fid: FundingId) -> WrappedBalance {
     match query(deps.as_ref(), mock_env(), QueryMsg::Deposit(fid)) {
-        Err(_) => WrappedNativeBalance::default(),
+        Err(_) => WrappedBalance::default(),
         Ok(deposit) => {
             let bals: cw0::NativeBalance = cosmwasm_std::from_binary(&deposit).unwrap();
-            WrappedNativeBalance::from(bals.0)
+            WrappedBalance::from(bals.0)
         },
     }
 }

@@ -37,12 +37,12 @@ pub type FundingId = Hash;
 ///
 /// Holds balances for multiple assets.
 #[derive(Clone, Default, Debug, PartialEq, JsonSchema)]
-pub struct WrappedNativeBalance(pub NativeBalance);
+pub struct WrappedBalance(pub NativeBalance);
 
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
 struct EncodedBalance(Vec<(String, [u8; 16])>);
 
-pub type Deposit = WrappedNativeBalance;
+pub type Deposit = WrappedBalance;
 
 /// Funding is used to encode a ChannelId with an OffIdentity
 /// to allow for a reproducible way of calculating a FundingId.
@@ -149,7 +149,7 @@ impl Params {
     }
 }
 
-impl From<Vec<Coin>> for WrappedNativeBalance {
+impl From<Vec<Coin>> for WrappedBalance {
     fn from(cs: Vec<Coin>) -> Self {
         let mut raw = cw0::NativeBalance(cs);
         raw.normalize();
@@ -157,13 +157,13 @@ impl From<Vec<Coin>> for WrappedNativeBalance {
     }
 }
 
-impl From<WrappedNativeBalance> for Vec<Coin> {
-    fn from(b: WrappedNativeBalance) -> Self {
+impl From<WrappedBalance> for Vec<Coin> {
+    fn from(b: WrappedBalance) -> Self {
         b.0.into_vec()
     }
 }
 
-impl Add<&WrappedNativeBalance> for WrappedNativeBalance {
+impl Add<&WrappedBalance> for WrappedBalance {
     type Output = Self;
 
     fn add(mut self, other: &Self) -> Self::Output {
@@ -172,7 +172,7 @@ impl Add<&WrappedNativeBalance> for WrappedNativeBalance {
     }
 }
 
-impl Serialize for WrappedNativeBalance {
+impl Serialize for WrappedBalance {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map: EncodedBalance = Default::default();
         for coin in self.0.0.iter() {
@@ -183,7 +183,7 @@ impl Serialize for WrappedNativeBalance {
     }
 }
 
-impl<'a> Deserialize<'a> for WrappedNativeBalance {
+impl<'a> Deserialize<'a> for WrappedBalance {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: Deserializer<'a>,
@@ -195,16 +195,16 @@ impl<'a> Deserialize<'a> for WrappedNativeBalance {
             let amount = u128::from_be_bytes(data);
             bals.push(Coin::new(amount, coin.0.clone()));
         }
-        Ok(WrappedNativeBalance::from(bals))
+        Ok(WrappedBalance::from(bals))
     }
 }
 
-impl WrappedNativeBalance {
+impl WrappedBalance {
     /// Models `self >= b`.
     /// Defines a non-strict partial order in the mathematical sense since
     /// there exist `a` and `b` where `¬(a >= b) ^ ¬(b >= a)`.
     /// Only works with normalized inputs.
-    pub fn greater_or_equal(&self, b: &WrappedNativeBalance) -> bool {
+    pub fn greater_or_equal(&self, b: &WrappedBalance) -> bool {
         b.0 .0.iter().map(|b| self.0.has(b)).all(|x| x)
     }
 }

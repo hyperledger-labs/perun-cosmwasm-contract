@@ -265,15 +265,15 @@ fn push_outcome(
     // Save all Funding IDs for later.
     let mut fids = Vec::<FundingId>::default();
     // Calculate the sums of the outcome and deposit.
-    let mut sum_outcome = WrappedNativeBalance::default();
-    let mut sum_deposit = WrappedNativeBalance::default();
+    let mut sum_outcome = WrappedBalance::default();
+    let mut sum_deposit = WrappedBalance::default();
 
     for (i, part) in parts.iter().enumerate() {
         let fid = calc_funding_id(channel_id, part)?;
         fids.push(fid.clone());
         let deposit = DEPOSITS.load(storage, fid).unwrap_or_default();
 
-        let outcome_ = WrappedNativeBalance::from(outcome[i].0.clone());
+        let outcome_ = WrappedBalance::from(outcome[i].0.clone());
         sum_outcome = sum_outcome.add(&outcome_);
         sum_deposit = sum_deposit.add(&deposit);
     }
@@ -286,7 +286,7 @@ fn push_outcome(
     // Over-funding a channel will result in lost funds.
     // Now we split up all funds according to the outcome.
     for (i, fid) in fids.iter().enumerate() {
-        let outcome_ = WrappedNativeBalance::from(outcome[i].0.clone());
+        let outcome_ = WrappedBalance::from(outcome[i].0.clone());
         DEPOSITS.save(storage, fid.to_vec(), &outcome_)?;
     }
     Ok(Default::default())

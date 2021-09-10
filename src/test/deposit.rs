@@ -12,7 +12,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 
-use crate::{test::common::setup::*, types::WrappedNativeBalance};
+use crate::{test::common::setup::*, types::WrappedBalance};
 use cosmwasm_std::coin;
 
 #[test]
@@ -46,7 +46,7 @@ fn deposit_twice() {
 fn deposit_overflow() {
     let (s, mut deps) = do_init();
 
-    let bals: WrappedNativeBalance = vec![coin(std::u128::MAX - 10, DENOMS[0])].into();
+    let bals: WrappedBalance = vec![coin(std::u128::MAX - 10, DENOMS[0])].into();
     // Normal
     do_deposit(deps.as_mut(), &s.fids[0], &bals, ALICE.into()).unwrap();
     // Overflow

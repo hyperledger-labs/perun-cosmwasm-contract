@@ -12,20 +12,6 @@ args = ["test", "--all-features"]
 command = "cargo"
 args = ["run", "--example", "schema"]
 
-[tasks.schema-check]
-command = "git"
-args = ["diff", "--quiet", "./schema/"]
-dependencies = ["schema"]
-
-[tasks.serde]
-command = "cargo"
-args = ["run", "--example", "serde"]
-
-[tasks.serde-check]
-command = "git"
-args = ["diff", "--quiet", "./serde/"]
-dependencies = ["serde"]
-
 [tasks.build]
 command = "cargo"
 args = ["build", "-q", "--all-targets", "--all-features"]

@@ -91,7 +91,7 @@ pub fn random_dispute_duration<T: CryptoRng + Rng>(rng: &mut T) -> Seconds {
     Uint64::from(rng.gen_range::<u64,_>(1..600))
 }
 
-pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedNativeBalance {
+pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedBalance {
     let num_coins = rng.gen_range(0..9);
     (0..num_coins)
         .map(|i| coin(rng.next_u64().into(), format!("asset-#{}", i)))
