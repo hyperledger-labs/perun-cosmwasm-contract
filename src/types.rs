@@ -18,12 +18,12 @@ use crate::{
     ensure,
     error::ContractError,
 };
-use cosmwasm_std::{Coin, Timestamp, Api, Uint64};
+use cosmwasm_std::{Api, Coin, Timestamp, Uint64};
+use cw0::NativeBalance;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use sha2::Digest;
 use std::ops::Add;
-use cw0::NativeBalance;
 
 /// Uniquely identifies a channel.
 ///
@@ -115,12 +115,12 @@ pub struct State {
 /// Can be advanced with a higher version via `Dispute` as long as the
 /// timeout did not run out.
 pub struct Dispute {
-        /// The state of the disputed channel.
-        pub state: State,
-        /// Timeout of the dispute.
-        pub timeout: Timestamp,
-        /// Indicates whether the dispute has been concluded.
-        pub concluded: bool,
+    /// The state of the disputed channel.
+    pub state: State,
+    /// Timeout of the dispute.
+    pub timeout: Timestamp,
+    /// Indicates whether the dispute has been concluded.
+    pub concluded: bool,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -175,7 +175,7 @@ impl Add<&WrappedBalance> for WrappedBalance {
 impl Serialize for WrappedBalance {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         let mut map: EncodedBalance = Default::default();
-        for coin in self.0.0.iter() {
+        for coin in self.0 .0.iter() {
             let data = coin.amount.u128().to_be_bytes();
             map.0.push((coin.denom.clone(), data));
         }
@@ -211,11 +211,21 @@ impl WrappedBalance {
 
 impl State {
     /// Verifies that `from` signed this State.
-    pub fn verify(&self, sig: &Sig, from: &OffIdentity, api: &dyn Api) -> Result<(), ContractError> {
+    pub fn verify(
+        &self,
+        sig: &Sig,
+        from: &OffIdentity,
+        api: &dyn Api,
+    ) -> Result<(), ContractError> {
         verify(self, from, sig, api)
     }
     /// Verifies that all participants signed this State.
-    pub fn verify_fully_signed(&self, params: &Params, sigs: &[Sig], api: &dyn Api) -> Result<(), ContractError> {
+    pub fn verify_fully_signed(
+        &self,
+        params: &Params,
+        sigs: &[Sig],
+        api: &dyn Api,
+    ) -> Result<(), ContractError> {
         // Check that the State and Params match.
         let channel_id = params.channel_id()?;
         ensure!(

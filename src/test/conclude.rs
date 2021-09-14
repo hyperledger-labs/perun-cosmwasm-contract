@@ -22,7 +22,10 @@ use crate::{
         setup::*,
     },
 };
-use cosmwasm_std::{Uint64, testing::{mock_env, mock_info}};
+use cosmwasm_std::{
+    testing::{mock_env, mock_info},
+    Uint64,
+};
 
 #[test]
 fn conclude_f_final() {

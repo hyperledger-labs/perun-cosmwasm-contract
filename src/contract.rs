@@ -17,7 +17,7 @@ use crate::{
     crypto::{OffIdentity, Sig},
     ensure,
     error::ContractError,
-    msg::{ExecuteMsg, InitMsg, QueryMsg, DepositResponse, DisputeResponse},
+    msg::{DepositResponse, DisputeResponse, ExecuteMsg, InitMsg, QueryMsg},
     storage::{DEPOSITS, DISPUTES},
     types::*,
 };
@@ -76,7 +76,7 @@ pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> Result<Binary, ContractErr
 fn query_deposit(deps: Deps, fid: FundingId) -> Result<Binary, ContractError> {
     match DEPOSITS.may_load(deps.storage, fid)? {
         Some(deposit) => {
-            let out = to_binary(&DepositResponse(deposit.0.0))?;
+            let out = to_binary(&DepositResponse(deposit.0 .0))?;
             Ok(out)
         }
         None => Err(ContractError::UnknownChannel {}),
@@ -123,7 +123,7 @@ fn dispute(
             let timeout = now.plus_seconds(params.dispute_duration.u64());
             let dispute = Dispute {
                 state: state.clone(),
-                timeout: timeout,
+                timeout,
                 concluded: false,
             };
             DISPUTES.save(deps.storage, channel_id, &dispute)?;
@@ -170,9 +170,14 @@ fn conclude(
             } else {
                 Err(ContractError::DisputeActive {})
             }
-        },
+        }
         None => {
-            push_outcome(deps.storage, channel_id, &params.participants, &state.balances)?;
+            push_outcome(
+                deps.storage,
+                channel_id,
+                &params.participants,
+                &state.balances,
+            )?;
             let reg = Dispute {
                 state: state.clone(),
                 timeout: Timestamp::from_seconds(0),
@@ -193,22 +198,34 @@ fn conclude_dispute(
     let channel_id = params.channel_id()?;
     match DISPUTES.may_load(storage, channel_id.clone())? {
         None => Err(ContractError::UnknownDispute {}),
-        Some(Dispute { state, timeout, concluded }) => {
+        Some(Dispute {
+            state,
+            timeout,
+            concluded,
+        }) => {
             if concluded {
                 Err(ContractError::AlreadyConcluded {})
             } else {
-            // Check that the timeout has elapsed for non-final states.
-            ensure!(
-                state.finalized || now >= timeout,
-                ContractError::ConcludedTooEarly {}
-            );
-            // Write the outcome of the channel.
-            push_outcome(storage, &channel_id, &params.participants, &state.balances)?;
-            // End the dispute.
-            DISPUTES.save(storage, channel_id, &Dispute { state, timeout, concluded: true })?;
-            Ok(Default::default())
+                // Check that the timeout has elapsed for non-final states.
+                ensure!(
+                    state.finalized || now >= timeout,
+                    ContractError::ConcludedTooEarly {}
+                );
+                // Write the outcome of the channel.
+                push_outcome(storage, &channel_id, &params.participants, &state.balances)?;
+                // End the dispute.
+                DISPUTES.save(
+                    storage,
+                    channel_id,
+                    &Dispute {
+                        state,
+                        timeout,
+                        concluded: true,
+                    },
+                )?;
+                Ok(Default::default())
             }
-        },
+        }
     }
 }
 
@@ -222,7 +239,11 @@ fn withdraw(
     // Load the dispute.
     match DISPUTES.may_load(deps.storage, withdrawal.channel_id.clone())? {
         None => Err(ContractError::UnknownChannel {}),
-        Some(Dispute { state: _state, timeout: _timeout, concluded }) => {
+        Some(Dispute {
+            state: _state,
+            timeout: _timeout,
+            concluded,
+        }) => {
             if !concluded {
                 Err(ContractError::NotConcluded {})
             } else {
@@ -240,7 +261,7 @@ fn withdraw(
                 };
                 Ok(Response::new().add_message(transfer))
             }
-        },
+        }
     }
 }
 

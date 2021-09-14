@@ -19,7 +19,7 @@ use crate::{
     },
     types::*,
 };
-use cosmwasm_std::{coin, coins, Coin, Uint128, testing::mock_dependencies};
+use cosmwasm_std::{coin, coins, testing::mock_dependencies, Coin, Uint128};
 
 #[test]
 fn native_balance_cmp() {

@@ -15,7 +15,7 @@
 //! Messages for interacting with the [crate::contract].
 use crate::{
     crypto::Sig,
-    types::{ChannelId, FundingId, Params, State, Withdrawal, Dispute},
+    types::{ChannelId, Dispute, FundingId, Params, State, Withdrawal},
 };
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -80,7 +80,7 @@ pub enum QueryMsg {
 }
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-pub struct DepositResponse ( pub Vec<cosmwasm_std::Coin> );
+pub struct DepositResponse(pub Vec<cosmwasm_std::Coin>);
 
 #[derive(Serialize, Deserialize, Clone, PartialEq, JsonSchema)]
-pub struct DisputeResponse ( pub Dispute );
+pub struct DisputeResponse(pub Dispute);

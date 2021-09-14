@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 use cosmwasm_schema::{export_schema, remove_schemas, schema_for};
-use perun_cosmwasm::{msg::*};
+use perun_cosmwasm::msg::*;
 use std::{env::current_dir, fs::create_dir_all};
 
 /// Entry point for generating the schema files.

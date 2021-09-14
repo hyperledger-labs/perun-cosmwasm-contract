@@ -16,8 +16,8 @@ use crate::{
     crypto::verify,
     test::common::{crypto::sign, random::random_account},
 };
-use rand_core::RngCore;
 use cosmwasm_std::testing::mock_dependencies;
+use rand_core::RngCore;
 
 #[test]
 fn sig_verify() {

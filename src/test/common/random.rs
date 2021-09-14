@@ -88,7 +88,7 @@ pub fn random_parts<T: CryptoRng + Rng>(rng: &mut T, n: usize) -> Vec<KeyPair> {
 }
 
 pub fn random_dispute_duration<T: CryptoRng + Rng>(rng: &mut T) -> Seconds {
-    Uint64::from(rng.gen_range::<u64,_>(1..600))
+    Uint64::from(rng.gen_range::<u64, _>(1..600))
 }
 
 pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedBalance {
@@ -99,7 +99,10 @@ pub fn random_balance<T: CryptoRng + Rng>(rng: &mut T) -> WrappedBalance {
         .into()
 }
 
-pub fn random_balances<T: CryptoRng + Rng>(rng: &mut T, num_parts: usize) -> Vec<cw0::NativeBalance> {
+pub fn random_balances<T: CryptoRng + Rng>(
+    rng: &mut T,
+    num_parts: usize,
+) -> Vec<cw0::NativeBalance> {
     (1..num_parts).map(|_| random_balance(rng).0).collect()
 }
 

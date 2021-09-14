@@ -13,7 +13,7 @@
 //  limitations under the License.
 
 //! Definition of the on-chain storage containers.
-use crate::types::{ChannelId, Dispute, FundingId, Deposit};
+use crate::types::{ChannelId, Deposit, Dispute, FundingId};
 use cw_storage_plus::Map;
 
 pub const DEPOSITS: Map<FundingId, Deposit> = Map::new("deposits");

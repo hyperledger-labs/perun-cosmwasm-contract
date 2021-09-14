@@ -23,7 +23,10 @@ use crate::{
     },
     types::*,
 };
-use cosmwasm_std::{Uint64, testing::{mock_env, mock_info}};
+use cosmwasm_std::{
+    testing::{mock_env, mock_info},
+    Uint64,
+};
 
 /// Dispute works with a non-final state.
 #[test]

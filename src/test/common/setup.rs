@@ -52,7 +52,7 @@ pub fn new_setup() -> Setup {
     let params = Params {
         nonce: random_nonce(&mut rng),
         participants: vec![alice_off.1.clone(), bob_off.1.clone()],
-        dispute_duration:  60u64.into(),
+        dispute_duration: 60u64.into(),
     };
     let cid = params.channel_id().unwrap();
     let alloc = vec![
@@ -150,7 +150,7 @@ pub fn query_deposit(deps: DepsMut, fid: FundingId) -> WrappedBalance {
         Ok(deposit) => {
             let bals: cw0::NativeBalance = cosmwasm_std::from_binary(&deposit).unwrap();
             WrappedBalance::from(bals.0)
-        },
+        }
     }
 }
 
