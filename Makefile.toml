@@ -6,7 +6,7 @@ dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema"]
 
 [tasks.test]
 command = "cargo"
-args = ["test", "--all-features"]
+args = ["test"]
 
 [tasks.schema]
 command = "cargo"
@@ -14,7 +14,7 @@ args = ["run", "--example", "schema"]
 
 [tasks.build]
 command = "cargo"
-args = ["build", "-q", "--all-targets", "--all-features"]
+args = ["build", "-q", "--all-targets"]
 
 [tasks.fmt-check]
 command = "cargo"
@@ -23,15 +23,15 @@ dependencies = ["install-rustfmt"]
 
 [tasks.check]
 command = "cargo"
-args = ["check", "-q", "--all-targets", "--all-features", "--locked"]
+args = ["check", "-q", "--all-targets", "--locked"]
 
 [tasks.doc]
 command = "cargo"
-args = ["doc", "-q", "--no-deps", "--all-features"]
+args = ["doc", "-q", "--no-deps"]
 
 [tasks.lint]
 command = "cargo"
-args = ["clippy", "-q", "--all-targets", "--all-features"]
+args = ["clippy", "-q", "--all-targets"]
 dependencies = ["install-clippy-any"]
 
 [tasks.optimize]
