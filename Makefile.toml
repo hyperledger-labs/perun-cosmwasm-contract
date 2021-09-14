@@ -2,7 +2,7 @@
 RUST_BACKTRACE = "1"
 
 [tasks.ci]
-dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema-check", "serde-check", "golang-check"]
+dependencies = ["check", "lint", "fmt-check", "build", "doc", "test", "schema"]
 
 [tasks.test]
 command = "cargo"

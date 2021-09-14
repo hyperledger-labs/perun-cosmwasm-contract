@@ -178,7 +178,7 @@ fn conclude(
                 timeout: Timestamp::from_seconds(0),
                 concluded: true,
             };
-            DISPUTES.save(deps.storage, channel_id.clone(), &reg)?; // TODO maybe use error into?
+            DISPUTES.save(deps.storage, channel_id.clone(), &reg)?;
             Ok(Default::default())
         }
     }
