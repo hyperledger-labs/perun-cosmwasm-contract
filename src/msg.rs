@@ -47,18 +47,10 @@ pub enum ExecuteMsg {
     /// and can only be re-disputed while it did not run out.
     /// [ExecuteMsg::Conclude] can be called after the timeout ran out.
     Dispute(Params, State, Vec<Sig>),
-    /// Collaboratively concludes a channel in one step.
+    /// Concludes a channel.
     ///
-    /// This function concludes a channel in the case that all participants
-    /// want to close it.
-    /// Can only be called with a [State::finalized] state that is signed by
-    /// all participants.
+    /// Expects either a final state or the dispute period to be over.
     Conclude(Params, State, Vec<Sig>),
-    /// Concluded a disputed channel.
-    ///
-    /// Can only be called after the timeout of the dispute ran out or if
-    /// a [State::finalized] state is provided and signed by all participants.
-    ConcludeDispute(Params),
     /// Withdraws funds from a concluded channel.
     ///
     /// Can be called by each participant after a channel was concluded to

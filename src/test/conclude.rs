@@ -160,7 +160,7 @@ fn conclude_d_too_early() {
     do_dispute(deps.as_mut(), &s.params, &s.nfinal_state, &sigs).unwrap();
 
     assert_eq!(
-        do_conclude_dispute(deps.as_mut(), &s.params).unwrap_err(),
+        do_conclude(deps.as_mut(), &s.params, &s.nfinal_state, &sigs).unwrap_err(),
         ContractError::ConcludedTooEarly {}
     );
 }
@@ -177,7 +177,7 @@ fn conclude_d_after_timeout() {
 
     // Advance time after the timeout and try call to `ConcludeDispute`.
     let env = advance_time(mock_env(), s.params.dispute_duration + Uint64::from(1u64));
-    let msg = ExecuteMsg::ConcludeDispute(s.params);
+    let msg = ExecuteMsg::Conclude(s.params, s.nfinal_state, sigs);
     let info = mock_info(ALICE, &[]);
     execute(deps.as_mut(), env, info, msg).unwrap();
 }

@@ -53,9 +53,8 @@ pub fn execute(
         ExecuteMsg::Dispute(params, state, sigs) => {
             dispute(deps, env.block.time, &params, &state, &sigs)
         }
-        ExecuteMsg::Conclude(params, state, sigs) => conclude(deps, &params, &state, &sigs),
-        ExecuteMsg::ConcludeDispute(params) => {
-            conclude_dispute(deps.storage, env.block.time, &params)
+        ExecuteMsg::Conclude(params, state, sigs) => {
+            conclude(deps, env.block.time, &params, &state, &sigs)
         }
         ExecuteMsg::Withdraw(withdrawal, sig) => withdraw(deps, &withdrawal, &sig),
     }
@@ -155,78 +154,52 @@ fn dispute(
 /// See [crate::msg::ExecuteMsg::Conclude].
 fn conclude(
     deps: DepsMut,
+    now: Timestamp,
     params: &Params,
     state: &State,
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
-    ensure!(state.finalized, ContractError::StateNotFinal {});
     state.verify_fully_signed(params, sigs, deps.api)?;
     let channel_id = &state.channel_id;
 
     match DISPUTES.may_load(deps.storage, channel_id.clone())? {
         Some(dispute) => {
+            // Return if already concluded.
             if dispute.concluded {
-                Err(ContractError::AlreadyConcluded {})
-            } else {
-                Err(ContractError::DisputeActive {})
+                // Ensure that the state equals the concluded state.
+                ensure!(
+                    state == &dispute.state,
+                    ContractError::ConcludedWithDifferentState {}
+                );
+                return Ok(Default::default());
             }
+
+            // Ensure that the dispute period is over or the state is final.
+            ensure!(
+                now >= dispute.timeout || state.finalized,
+                ContractError::ConcludedTooEarly {}
+            );
         }
         None => {
-            push_outcome(
-                deps.storage,
-                channel_id,
-                &params.participants,
-                &state.balances,
-            )?;
-            let reg = Dispute {
-                state: state.clone(),
-                timeout: Timestamp::from_seconds(0),
-                concluded: true,
-            };
-            DISPUTES.save(deps.storage, channel_id.clone(), &reg)?;
-            Ok(Default::default())
+            // Ensure that the state is final.
+            ensure!(state.finalized, ContractError::StateNotFinal {});
         }
     }
-}
 
-/// See [crate::msg::ExecuteMsg::ConcludeDispute].
-fn conclude_dispute(
-    storage: &mut dyn Storage,
-    now: Timestamp,
-    params: &Params,
-) -> Result<Response, ContractError> {
-    let channel_id = params.channel_id()?;
-    match DISPUTES.may_load(storage, channel_id.clone())? {
-        None => Err(ContractError::UnknownDispute {}),
-        Some(Dispute {
-            state,
-            timeout,
-            concluded,
-        }) => {
-            if concluded {
-                Err(ContractError::AlreadyConcluded {})
-            } else {
-                // Check that the timeout has elapsed for non-final states.
-                ensure!(
-                    state.finalized || now >= timeout,
-                    ContractError::ConcludedTooEarly {}
-                );
-                // Write the outcome of the channel.
-                push_outcome(storage, &channel_id, &params.participants, &state.balances)?;
-                // End the dispute.
-                DISPUTES.save(
-                    storage,
-                    channel_id,
-                    &Dispute {
-                        state,
-                        timeout,
-                        concluded: true,
-                    },
-                )?;
-                Ok(Default::default())
-            }
-        }
-    }
+    // Persist the outcome.
+    push_outcome(
+        deps.storage,
+        channel_id,
+        &params.participants,
+        &state.balances,
+    )?;
+    let reg = Dispute {
+        state: state.clone(),
+        timeout: Timestamp::from_seconds(0),
+        concluded: true,
+    };
+    DISPUTES.save(deps.storage, channel_id.clone(), &reg)?;
+    Ok(Default::default())
 }
 
 /// See [crate::msg::ExecuteMsg::Withdraw].

@@ -128,12 +128,6 @@ pub fn do_dispute(
     execute(deps, mock_env(), info, msg)
 }
 
-pub fn do_conclude_dispute(deps: DepsMut, params: &Params) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::ConcludeDispute(params.clone());
-    let info = mock_info(ALICE, &[]);
-    execute(deps, mock_env(), info, msg)
-}
-
 pub fn do_withdraw(
     deps: DepsMut,
     withdrawal: &Withdrawal,

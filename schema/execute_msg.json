@@ -51,7 +51,7 @@
       "additionalProperties": false
     },
     {
-      "description": "Collaboratively concludes a channel in one step.\n\nThis function concludes a channel in the case that all participants want to close it. Can only be called with a [State::finalized] state that is signed by all participants.",
+      "description": "Concludes a channel.\n\nExpects either a final state or the dispute period to be over.",
       "type": "object",
       "required": [
         "conclude"
@@ -75,19 +75,6 @@
           ],
           "maxItems": 3,
           "minItems": 3
-        }
-      },
-      "additionalProperties": false
-    },
-    {
-      "description": "Concluded a disputed channel.\n\nCan only be called after the timeout of the dispute ran out or if a [State::finalized] state is provided and signed by all participants.",
-      "type": "object",
-      "required": [
-        "conclude_dispute"
-      ],
-      "properties": {
-        "conclude_dispute": {
-          "$ref": "#/definitions/Params"
         }
       },
       "additionalProperties": false

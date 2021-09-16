@@ -36,9 +36,6 @@ pub enum ContractError {
     #[error("Unknown deposit")]
     UnknownDeposit {},
 
-    #[error("DisputeActive")]
-    DisputeActive {},
-
     #[error("Dispute version too low")]
     DisputeVersionTooLow {},
 
@@ -47,6 +44,9 @@ pub enum ContractError {
 
     #[error("Already concluded")]
     AlreadyConcluded {},
+
+    #[error("Concluded with different state")]
+    ConcludedWithDifferentState {},
 
     #[error("Concluded too early")]
     ConcludedTooEarly {},
