@@ -53,7 +53,26 @@ A dispute is initiated by calling *Dispute* with the latest available state.
 A registered state can be refuted within a specified challenge period by calling *Dispute* with a newer state.
 After the challenge period, the dispute can be concluded by calling *ConcludeDispute* and the funds can be withdrawn.
 
-![state diagram](.assets/protocol.png)
+### State diagram
+
+```pre
+           ┌────────┐                 ┌─────────────┐            ┌─────────────┐
+  Deposit  │        │    Conclude     │             │  Withdraw  │             │
+──────────►│  OPEN  ├────────────────►│  CONCLUDED  ├───────────►│  WITHDRAWN  │
+           │        │                 │             │            │             │
+           └───┬────┘                 └─────────────┘            └─────────────┘
+               │                             ▲
+               │                             │
+            Dispute                          │
+               │                             │
+               │                             │
+               ▼                             │
+           ┌────────┐                        │
+     ┌─────┤        │     Conclude           │
+  Dis│pute │DISPUTED├────────────────────────┘
+     └────►│        │
+           └────────┘
+```
 
 ## Schema generation
 All `json` schema files can be found in directory `schema/`.
