@@ -47,11 +47,11 @@ The participants of the channel can then do as many off-chain channel updates as
 When all participants come to the conclusion that the channel should be closed, they set the final flag on the channel state, and call *Conclude*.
 All of them can then withdraw the outcome by calling *Withdraw*. 
 
-*Dispute* and *ConcludeDispute* are only needed if the particpants do not arrive at a final channel state off-chain.
-They allow any participant to enforce the last valid state, i.e., the mutually-signed state with the highest version number.
+*Dispute* is only needed if the particpants do not arrive at a final channel state off-chain.
+It allows any participant to enforce the last valid state, i.e., the mutually-signed state with the highest version number.
 A dispute is initiated by calling *Dispute* with the latest available state.
 A registered state can be refuted within a specified challenge period by calling *Dispute* with a newer state.
-After the challenge period, the dispute can be concluded by calling *ConcludeDispute* and the funds can be withdrawn.
+After the challenge period, the dispute can be concluded by calling *Conclude* and the funds can be withdrawn.
 
 ### State diagram
 
