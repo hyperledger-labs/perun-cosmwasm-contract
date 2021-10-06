@@ -16,12 +16,11 @@ jobs:
           toolchain: nightly
           override: true
           components: rustfmt, clippy
+
+      - uses: davidB/rust-cargo-make@v1
         
       - uses: Swatinem/rust-cache@v1
         name: Setup Cache
-
-      - name: Setup cargo-make
-        run: cargo install --debug cargo-make
 
       - name: cargo make ci
         run: cargo make ci
