@@ -112,7 +112,11 @@ pub fn do_conclude(
     state: &State,
     sigs: &[Sig],
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Conclude(params.clone(), state.clone(), sigs.into());
+    let msg = ExecuteMsg::Conclude {
+        params: params.clone(),
+        state: state.clone(),
+        sigs: sigs.into(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
@@ -123,7 +127,11 @@ pub fn do_dispute(
     state: &State,
     sigs: &Vec<Sig>,
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Dispute(params.clone(), state.clone(), sigs.clone());
+    let msg = ExecuteMsg::Dispute {
+        params: params.clone(),
+        state: state.clone(),
+        sigs: sigs.clone(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }
@@ -133,7 +141,10 @@ pub fn do_withdraw(
     withdrawal: &Withdrawal,
     sig: &Sig,
 ) -> Result<Response, ContractError> {
-    let msg = ExecuteMsg::Withdraw(withdrawal.clone(), sig.clone());
+    let msg = ExecuteMsg::Withdraw {
+        withdrawal: withdrawal.clone(),
+        sig: sig.clone(),
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps, mock_env(), info, msg)
 }

@@ -142,11 +142,11 @@ fn conclude_f_wrong_params() {
     wrong_params.participants.reverse();
 
     do_deposit(deps.as_mut(), &s.fids[0], &s.alloc[0], ALICE.into()).unwrap();
-    let msg = ExecuteMsg::Conclude(
-        wrong_params,
-        s.final_state,
-        vec![], // Use empty sigs since they are not checked.
-    );
+    let msg = ExecuteMsg::Conclude {
+        params: wrong_params,
+        state: s.final_state,
+        sigs: vec![], // Use empty sigs since they are not checked.
+    };
     let info = mock_info(ALICE, &[]);
     assert_eq!(
         execute(deps.as_mut(), mock_env(), info, msg).unwrap_err(),
@@ -180,7 +180,11 @@ fn conclude_d_after_timeout() {
 
     // Advance time after the timeout and try call to `ConcludeDispute`.
     let env = advance_time(mock_env(), s.params.dispute_duration + Uint64::from(1u64));
-    let msg = ExecuteMsg::Conclude(s.params, s.nfinal_state, sigs);
+    let msg = ExecuteMsg::Conclude {
+        params: s.params,
+        state: s.nfinal_state,
+        sigs,
+    };
     let info = mock_info(ALICE, &[]);
     execute(deps.as_mut(), env, info, msg).unwrap();
 }

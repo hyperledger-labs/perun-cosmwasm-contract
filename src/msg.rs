@@ -46,17 +46,25 @@ pub enum ExecuteMsg {
     /// A dispute automatically starts a timeout of [Params::dispute_duration]
     /// and can only be re-disputed while it did not run out.
     /// [ExecuteMsg::Conclude] can be called after the timeout ran out.
-    Dispute(Params, State, Vec<Sig>),
+    Dispute {
+        params: Params,
+        state: State,
+        sigs: Vec<Sig>,
+    },
     /// Concludes a channel.
     ///
     /// Expects either a final state or the dispute period to be over.
-    Conclude(Params, State, Vec<Sig>),
+    Conclude {
+        params: Params,
+        state: State,
+        sigs: Vec<Sig>,
+    },
     /// Withdraws funds from a concluded channel.
     ///
     /// Can be called by each participant after a channel was concluded to
     /// withdraw his outcome of the channel.
     /// This is the counterpart to [ExecuteMsg::Deposit].
-    Withdraw(Withdrawal, Sig),
+    Withdraw { withdrawal: Withdrawal, sig: Sig },
 }
 
 /// Message to query the state of the [crate::contract].

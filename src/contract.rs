@@ -50,13 +50,17 @@ pub fn execute(
 ) -> Result<Response, ContractError> {
     match msg {
         ExecuteMsg::Deposit(funding_id) => deposit(deps.storage, info, funding_id),
-        ExecuteMsg::Dispute(params, state, sigs) => {
-            dispute(deps, env.block.time, &params, &state, &sigs)
-        }
-        ExecuteMsg::Conclude(params, state, sigs) => {
-            conclude(deps, env.block.time, &params, &state, &sigs)
-        }
-        ExecuteMsg::Withdraw(withdrawal, sig) => withdraw(deps, &withdrawal, &sig),
+        ExecuteMsg::Dispute {
+            params,
+            state,
+            sigs,
+        } => dispute(deps, env.block.time, &params, &state, &sigs),
+        ExecuteMsg::Conclude {
+            params,
+            state,
+            sigs,
+        } => conclude(deps, env.block.time, &params, &state, &sigs),
+        ExecuteMsg::Withdraw { withdrawal, sig } => withdraw(deps, &withdrawal, &sig),
     }
 }
 

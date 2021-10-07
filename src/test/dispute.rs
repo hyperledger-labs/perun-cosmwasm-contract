@@ -227,7 +227,11 @@ fn dispute_timeout() {
     let sigs = fully_sign(&state, &s.keys);
 
     // Try to dispute again with `version + 1` after the timeout.
-    let msg = ExecuteMsg::Dispute(s.params.clone(), state, sigs);
+    let msg = ExecuteMsg::Dispute {
+        params: s.params.clone(),
+        state,
+        sigs,
+    };
     let info = mock_info(ALICE, &[]);
     let env = advance_time(mock_env(), s.params.dispute_duration + Uint64::from(1u64));
     assert_eq!(
