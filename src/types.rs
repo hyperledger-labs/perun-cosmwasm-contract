@@ -18,12 +18,38 @@ use crate::{
     ensure,
     error::ContractError,
 };
-use cosmwasm_std::{Api, Coin, Timestamp, Uint64};
+use cosmwasm_std::{Api, Binary, Coin, Timestamp, Uint64};
 use cw0::NativeBalance;
+use cw_storage_plus::PrimaryKey;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::ops::Add;
+
+/// WrappedBinary is a wrapper around Binary that enables usage as a map key.
+#[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
+pub struct WrappedBinary(pub Binary);
+
+impl WrappedBinary {
+    pub fn as_slice(&self) -> &[u8] {
+        self.0.as_slice()
+    }
+}
+
+impl<'a> PrimaryKey<'a> for WrappedBinary {
+    type Prefix = ();
+    type SubPrefix = ();
+
+    fn key(&self) -> Vec<&[u8]> {
+        vec![self.0.as_slice()]
+    }
+}
+
+impl std::convert::From<&[u8]> for WrappedBinary {
+    fn from(val: &[u8]) -> Self {
+        WrappedBinary(val.into())
+    }
+}
 
 /// Uniquely identifies a channel.
 ///
@@ -50,7 +76,7 @@ pub struct Funding {
 }
 
 /// Random value that is used to make the [Params] of a channel unique.
-pub type Nonce = Vec<u8>;
+pub type Nonce = Binary;
 /// Timely duration in seconds.
 pub type Seconds = Uint64;
 /// State version counter.
@@ -142,7 +168,7 @@ impl Params {
     /// Calculates the channel id from this Params.
     pub fn channel_id(&self) -> Result<ChannelId, ContractError> {
         let h = hash(self, vec![])?;
-        Ok(h.finalize().to_vec())
+        Ok(h.finalize().as_slice().into())
     }
 }
 
@@ -242,7 +268,7 @@ pub fn calc_funding_id(
         },
         vec![],
     )?;
-    Ok(digest.finalize().to_vec())
+    Ok(digest.finalize().as_slice().into())
 }
 
 /// Defines how objects are encoded in Perun CosmWASM.

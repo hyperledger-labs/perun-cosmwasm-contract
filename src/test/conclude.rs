@@ -113,8 +113,11 @@ fn conclude_f_invalid_sigs() {
     let good_sigs = fully_sign(&good_state, &s.keys);
     // Create two bad signatures.
     let bad_sigs = [
-        Sig("Invalid".into()),
-        Sig([good_sigs[0].0.as_slice(), b"Invalid"].concat()),
+        Sig("Invalid".as_bytes().into()),
+        Sig([good_sigs[0].0.as_slice(), b"Invalid"]
+            .concat()
+            .as_slice()
+            .into()),
     ];
 
     let sigs = [

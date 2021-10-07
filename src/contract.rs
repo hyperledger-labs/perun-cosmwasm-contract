@@ -281,7 +281,7 @@ fn push_outcome(
     // Now we split up all funds according to the outcome.
     for (i, fid) in fids.iter().enumerate() {
         let outcome_ = WrappedBalance::from(outcome[i].0.clone());
-        DEPOSITS.save(storage, fid.to_vec(), &outcome_)?;
+        DEPOSITS.save(storage, fid.clone(), &outcome_)?;
     }
     Ok(Default::default())
 }

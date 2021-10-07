@@ -13,7 +13,11 @@
 //  limitations under the License.
 
 //! Cryptographic helpers for hashing and signature verification.
-use crate::{ensure, error::ContractError, types::encode_obj};
+use crate::{
+    ensure,
+    error::ContractError,
+    types::{encode_obj, WrappedBinary},
+};
 use cosmwasm_std::Api;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
@@ -21,15 +25,15 @@ use sha2::{Digest, Sha256};
 
 /// Cryptographic signature.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct Sig(pub Vec<u8>);
+pub struct Sig(pub WrappedBinary);
 /// Off-Chain identity of a participant.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
-pub struct OffIdentity(pub Vec<u8>);
+pub struct OffIdentity(pub WrappedBinary);
 
 /// On-Chain identity of a participant.
 pub type OnIdentity = cosmwasm_std::Addr;
 /// Cryptographic hash.
-pub type Hash = Vec<u8>;
+pub type Hash = WrappedBinary;
 /// Cryptographic hash function.
 pub type Hasher = Sha256;
 
