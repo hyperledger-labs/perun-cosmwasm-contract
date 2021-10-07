@@ -11,12 +11,7 @@
       ],
       "properties": {
         "deposit": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
+          "$ref": "#/definitions/WrappedBinary"
         }
       },
       "additionalProperties": false
@@ -108,6 +103,10 @@
       "description": "A human readable address.\n\nIn Cosmos, this is typically bech32 encoded. But for multi-chain smart contracts no assumptions should be made other than being UTF-8 encoded and of reasonable length.\n\nThis type represents a validated address. It can be created in the following ways 1. Use `Addr::unchecked(input)` 2. Use `let checked: Addr = deps.api.addr_validate(input)?` 3. Use `let checked: Addr = deps.api.addr_humanize(canonical_addr)?` 4. Deserialize from JSON. This must only be done from JSON that was validated before such as a contract's state. `Addr` must not be used in messages sent by the user because this would result in unvalidated instances.\n\nThis type is immutable. If you really need to mutate it (Really? Are you sure?), create a mutable copy using `let mut mutable = Addr::to_string()` and operate on that `String` instance.",
       "type": "string"
     },
+    "Binary": {
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>",
+      "type": "string"
+    },
     "Coin": {
       "type": "object",
       "required": [
@@ -131,12 +130,11 @@
     },
     "OffIdentity": {
       "description": "Off-Chain identity of a participant.",
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "format": "uint8",
-        "minimum": 0.0
-      }
+      "allOf": [
+        {
+          "$ref": "#/definitions/WrappedBinary"
+        }
+      ]
     },
     "Params": {
       "description": "Fixed parameters of a channel.\n\nDefines the [ChannelId] of a channel via [Params::channel_id].",
@@ -157,12 +155,11 @@
         },
         "nonce": {
           "description": "Nonce to make these Params unique. Should be picked randomly.",
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/Binary"
+            }
+          ]
         },
         "participants": {
           "description": "Participants of the channel.\n\nContains the off-chain identities which are used to verify signatures for off-chain related crypto.",
@@ -175,12 +172,11 @@
     },
     "Sig": {
       "description": "Cryptographic signature.",
-      "type": "array",
-      "items": {
-        "type": "integer",
-        "format": "uint8",
-        "minimum": 0.0
-      }
+      "allOf": [
+        {
+          "$ref": "#/definitions/WrappedBinary"
+        }
+      ]
     },
     "State": {
       "description": "Off-Chain state of a channel.",
@@ -201,12 +197,11 @@
         },
         "channel_id": {
           "description": "Unique channel ID.\n\nIs calculated from the channel's [Params] with [Params::channel_id]. This locks all parameters in place and ensures that a participant that signed a state also signed the parameters of a channel.",
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/WrappedBinary"
+            }
+          ]
         },
         "finalized": {
           "description": "Whether or not this state is final.\n\nFinal states define the last state of a channel. An honest participant will never sign another state after he signed a final state.",
@@ -241,12 +236,11 @@
       "properties": {
         "channel_id": {
           "description": "Channel from with to withdraw.",
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/WrappedBinary"
+            }
+          ]
         },
         "part": {
           "description": "Off-chain participant to debit.",
@@ -265,6 +259,14 @@
           ]
         }
       }
+    },
+    "WrappedBinary": {
+      "description": "WrappedBinary is a wrapper around Binary that enables usage as a map key.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Binary"
+        }
+      ]
     }
   }
 }

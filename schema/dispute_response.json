@@ -7,6 +7,10 @@
     }
   ],
   "definitions": {
+    "Binary": {
+      "description": "Binary is a wrapper around Vec<u8> to add base64 de/serialization with serde. It also adds some helper methods to help encode inline.\n\nThis is only needed as serde-json-{core,wasm} has a horrible encoding for Vec<u8>",
+      "type": "string"
+    },
     "Coin": {
       "type": "object",
       "required": [
@@ -78,12 +82,11 @@
         },
         "channel_id": {
           "description": "Unique channel ID.\n\nIs calculated from the channel's [Params] with [Params::channel_id]. This locks all parameters in place and ensures that a participant that signed a state also signed the parameters of a channel.",
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "format": "uint8",
-            "minimum": 0.0
-          }
+          "allOf": [
+            {
+              "$ref": "#/definitions/WrappedBinary"
+            }
+          ]
         },
         "finalized": {
           "description": "Whether or not this state is final.\n\nFinal states define the last state of a channel. An honest participant will never sign another state after he signed a final state.",
@@ -114,6 +117,14 @@
     "Uint64": {
       "description": "A thin wrapper around u64 that is using strings for JSON encoding/decoding, such that the full u64 range can be used for clients that convert JSON numbers to floats, like JavaScript and jq.\n\n# Examples\n\nUse `from` to create instances of this and `u64` to get the value out:\n\n``` # use cosmwasm_std::Uint64; let a = Uint64::from(42u64); assert_eq!(a.u64(), 42);\n\nlet b = Uint64::from(70u32); assert_eq!(b.u64(), 70); ```",
       "type": "string"
+    },
+    "WrappedBinary": {
+      "description": "WrappedBinary is a wrapper around Binary that enables usage as a map key.",
+      "allOf": [
+        {
+          "$ref": "#/definitions/Binary"
+        }
+      ]
     }
   }
 }
