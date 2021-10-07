@@ -1,0 +1,38 @@
+name: Rust
+
+on: [push]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest 
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly
+          override: true
+          components: rustfmt, clippy
+
+      - uses: davidB/rust-cargo-make@v1
+        
+      - uses: Swatinem/rust-cache@v1
+        name: Setup Cache
+
+      - name: cargo make ci
+        run: cargo make ci
+
+      # - name: Setup kcov
+      #   run: sudo apt update && sudo apt install kcov
+
+      # - name: Coverage generation
+      #   run: cargo make coverage-flow
+
+      # - uses: codecov/codecov-action@v2
+      #   name: Codecov upload
+      #   with:
+      #     token: ${{ secrets.CODECOV_TOKEN }}
+      #     fail_ci_if_error: true
