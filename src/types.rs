@@ -21,7 +21,7 @@ use crate::{
 use cosmwasm_std::{Api, Coin, Timestamp, Uint64};
 use cw0::NativeBalance;
 use schemars::JsonSchema;
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Serialize};
 use sha2::Digest;
 use std::ops::Add;
 
@@ -36,11 +36,8 @@ pub type FundingId = Hash;
 /// Native balance of the protocol.
 ///
 /// Holds balances for multiple assets.
-#[derive(Clone, Default, Debug, PartialEq, JsonSchema)]
-pub struct WrappedBalance(pub NativeBalance);
-
 #[derive(Serialize, Deserialize, Clone, Default, Debug, PartialEq, JsonSchema)]
-struct EncodedBalance(Vec<(String, [u8; 16])>);
+pub struct WrappedBalance(pub NativeBalance);
 
 pub type Deposit = WrappedBalance;
 
@@ -169,33 +166,6 @@ impl Add<&WrappedBalance> for WrappedBalance {
     fn add(mut self, other: &Self) -> Self::Output {
         self.0 += other.0.clone();
         self
-    }
-}
-
-impl Serialize for WrappedBalance {
-    fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
-        let mut map: EncodedBalance = Default::default();
-        for coin in self.0 .0.iter() {
-            let data = coin.amount.u128().to_be_bytes();
-            map.0.push((coin.denom.clone(), data));
-        }
-        map.serialize(serializer)
-    }
-}
-
-impl<'a> Deserialize<'a> for WrappedBalance {
-    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
-    where
-        D: Deserializer<'a>,
-    {
-        let map = EncodedBalance::deserialize(deserializer)?;
-        let mut bals: Vec<Coin> = Default::default();
-        for coin in map.0.iter() {
-            let data: [u8; 16] = coin.1;
-            let amount = u128::from_be_bytes(data);
-            bals.push(Coin::new(amount, coin.0.clone()));
-        }
-        Ok(WrappedBalance::from(bals))
     }
 }
 
